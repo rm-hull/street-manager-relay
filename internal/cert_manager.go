@@ -24,10 +24,10 @@ func NewCertManager(cache *memoize.Memoizer) CertManager {
 }
 
 func (cm *CachedCertManager) Download(certURL string) (string, error) {
-	featureCollection, err, _ := memoize.Call(cm.cache, certURL, func() (string, error) {
+	certificate, err, _ := memoize.Call(cm.cache, certURL, func() (string, error) {
 		return cm.download(certURL)
 	})
-	return featureCollection, err
+	return certificate, err
 }
 
 func (cm *CachedCertManager) verifyMessageSignatureURL(certURL string) error {
@@ -54,7 +54,7 @@ func (cm *CachedCertManager) download(certURL string) (string, error) {
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			fmt.Printf("error closing response body: %v\n", err)
+			log.Printf("error closing response body: %v\n", err)
 		}
 	}()
 

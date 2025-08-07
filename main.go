@@ -107,7 +107,7 @@ func confirmSubscription(subscriptionURL string) error {
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			fmt.Printf("error closing response body: %v\n", err)
+			log.Printf("error closing response body: %v\n", err)
 		}
 	}()
 
