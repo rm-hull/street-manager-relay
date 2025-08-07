@@ -1,0 +1,25 @@
+{
+  "event_reference": 529771,
+  "event_type": "SECTION_58_CREATED",
+  "object_data": {
+    "section_58_reference_number": "S58-5990-46589070",
+    "section_58_coordinates": "LINESTRING(501251.53 222574.64,501305.92 222506.65)",
+    "section_58_status": "proposed",
+    "start_date": "2020-06-10T14:30:00.000Z",
+    "end_date": "2020-06-11T09:00:00.000Z",
+    "section_58_duration": "six_months",
+    "section_58_extent": "whole_road",
+    "section_58_location_type": "Cycleway, Footpath",
+    "status_change_date": "2020-06-10T14:30:00.000Z",
+    "highway_authority_swa_code": "5990",
+    "highway_authority": "CITY OF WESTMINSTER",
+    "usrn": "8401426",
+    "street_name": "Fake Street",
+    "area_name": "MARYLEBONE HIGH STREET",
+    "town": "London"
+  },
+  "event_time": "2020-06-04T08:00:00.000Z",
+  "object_type": "SECTION_58",
+  "object_reference": "S58-5990-46589070",
+  "version": 1
+}

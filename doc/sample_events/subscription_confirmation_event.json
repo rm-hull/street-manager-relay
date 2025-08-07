@@ -1,0 +1,12 @@
+{
+  "Type": "SubscriptionConfirmation",
+  "MessageId": "GUID",
+  "Token": "TOKEN",
+  "TopicArn": "UNIQUE REFERENCE FOR SNS TOPIC",
+  "Message": "You have chosen to subscribe to the topic <TOPIC ARN>\nTo confirm the subscription, visit the SubscribeURL included in this message.",
+  "SubscribeURL": "SUBSCRIPTION URL",
+  "Timestamp": "2020-06-04T10:05:15.215Z",
+  "SignatureVersion": "1",
+  "Signature": "MESSAGE SIGNATURE",
+  "SigningCertURL": "https://sns.eu-west-2.amazonaws.com/SimpleNotificationService-a86cb10b4e1f29c941702d737128f7b6.pem"
+}
