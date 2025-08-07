@@ -6,7 +6,6 @@ import (
 	"crypto/sha1"
 	"crypto/x509"
 	"encoding/base64"
-	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -14,7 +13,11 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+
+	jsoniter "github.com/json-iterator/go"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // SNSMessage represents the structure of an SNS message
 type SNSMessage struct {

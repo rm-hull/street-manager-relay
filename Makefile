@@ -49,7 +49,7 @@ build: $(BINARY_NAME)
 
 $(BINARY_NAME): $(GO_BINDINGS)
 	@echo "Building Go binary..."
-	go build -o $(BINARY_NAME) .
+	go build -tags=jsoniter -ldflags="-w -s" -o $(BINARY_NAME) .
 
 # Run the application
 run: $(GO_BINDINGS)
@@ -59,7 +59,8 @@ run: $(GO_BINDINGS)
 # Test target (depends on generated bindings)
 test: $(GO_BINDINGS)
 	@echo "Running tests..."
-	go test -v ./...
+	gotestsum --junitfile=./test-reports/junit.xml --format github-actions -- -v -coverprofile=profile.cov -coverpkg=./... ./...
+
 
 # Clean generated files
 clean: clean-bindings clean-json

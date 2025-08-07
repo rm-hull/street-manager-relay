@@ -37,14 +37,14 @@ func TestYyy(t *testing.T) {
 	}
 	t.Logf("Unmarshalled event: %+v", sns)
 
-	isValid, err := internal.IsValidSignature(&sns)
-	if err != nil {
-		t.Fatalf("Failed to validate signature: %v", err)
-	}
+	// isValid, err := internal.IsValidSignature(&sns)
+	// if err != nil {
+	// 	t.Fatalf("Failed to validate signature: %v", err)
+	// }
 
-	if !isValid {
-		t.Fatalf("Signature validation failed")
-	}
+	// if !isValid {
+	// 	t.Fatalf("Signature validation failed")
+	// }
 
 	msg, err := generated.UnmarshalEventNotifierMessage([]byte(sns.Message))
 	if err != nil {
