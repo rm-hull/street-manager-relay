@@ -172,7 +172,7 @@ func writeTimestampedFile(dataPath string, bodyBytes []byte) error {
 	fullDirPath := filepath.Join(dataPath, dateDir)
 
 	// Create the directory if it doesn't exist.
-	if err := os.MkdirAll(fullDirPath, os.ModePerm); err != nil {
+	if err := os.MkdirAll(fullDirPath, 0755); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
 
