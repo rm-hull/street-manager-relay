@@ -15,6 +15,7 @@ require (
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
 	github.com/oapi-codegen/runtime v1.1.1 // indirect
+	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/rabbitmq/amqp091-go v1.10.0 // indirect
 	github.com/redis/go-redis/v9 v9.12.0 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
@@ -37,6 +38,7 @@ require (
 	github.com/goccy/go-json v0.10.4 // indirect
 	github.com/json-iterator/go v1.1.12
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
+	github.com/kofalt/go-memoize v0.0.0-20240506050413-9e5eb99a0f2a
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect

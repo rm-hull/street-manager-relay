@@ -9,9 +9,6 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
-	"net/url"
 	"strings"
 
 	jsoniter "github.com/json-iterator/go"
@@ -40,12 +37,12 @@ func UnmarshalSNSMessage(data []byte) (SNSMessage, error) {
 	return r, err
 }
 
-func IsValidSignature(body *SNSMessage) (bool, error) {
+func IsValidSignature(body *SNSMessage, certManager CertManager) (bool, error) {
 	if err := verifyMessageSignatureVersion(body.SignatureVersion); err != nil {
 		return false, err
 	}
 
-	certificate, err := downloadCertificate(body.SigningCertURL)
+	certificate, err := certManager.Download(body.SigningCertURL)
 	if err != nil {
 		return false, err
 	}
@@ -58,46 +55,6 @@ func verifyMessageSignatureVersion(version string) error {
 		return errors.New("signature verification failed")
 	}
 	return nil
-}
-
-func verifyMessageSignatureURL(certURL string) error {
-	parsedURL, err := url.Parse(certURL)
-	if err != nil {
-		return fmt.Errorf("invalid URL: %w", err)
-	}
-
-	if parsedURL.Scheme != "https" {
-		return errors.New("SigningCertURL was not using HTTPS")
-	}
-	return nil
-}
-
-// TODO: Add caching for the certificate to avoid repeated downloads
-func downloadCertificate(certURL string) (string, error) {
-	if err := verifyMessageSignatureURL(certURL); err != nil {
-		return "", err
-	}
-
-	resp, err := http.Get(certURL)
-	if err != nil {
-		return "", fmt.Errorf("error fetching certificate: %w", err)
-	}
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			fmt.Printf("error closing response body: %v\n", err)
-		}
-	}()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("error fetching certificate: HTTP %d", resp.StatusCode)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("error reading certificate response: %w", err)
-	}
-
-	return string(body), nil
 }
 
 func validateSignature(message *SNSMessage, certificate string) (bool, error) {
