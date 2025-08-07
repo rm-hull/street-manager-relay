@@ -74,7 +74,7 @@ func server(dataPath string, port int) {
 
 func handleSNSMessage(dataPath string, certManager internal.CertManager) func(c *gin.Context) {
 	log.Printf("Storing incoming messages to path: %s", dataPath)
-	if err := os.MkdirAll(dataPath, os.ModePerm); err != nil {
+	if err := os.MkdirAll(dataPath, 0755); err != nil {
 		log.Fatalf("Failed to create data directory: %v", err)
 	}
 
