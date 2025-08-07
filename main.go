@@ -166,8 +166,8 @@ func handleNotification(body *internal.SNSMessage) error {
 }
 
 func writeTimestampedFile(dataPath string, bodyBytes []byte) error {
-	today := time.Now()
-	dateDir := today.Format("2006-01-02") // YYYY-MM-DD format
+	now := time.Now()
+	dateDir := now.Format("2006-01-02") // YYYY-MM-DD format
 
 	fullDirPath := filepath.Join(dataPath, dateDir)
 
@@ -176,7 +176,7 @@ func writeTimestampedFile(dataPath string, bodyBytes []byte) error {
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
 
-	epochMillis := time.Now().UnixMilli()
+	epochMillis := now.UnixMilli()
 	fileName := fmt.Sprintf("%05d.%03d.json", (epochMillis/1000)%86_400, epochMillis%1000)
 	filePath := filepath.Join(fullDirPath, fileName)
 
