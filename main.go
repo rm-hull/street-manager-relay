@@ -18,16 +18,16 @@ import (
 const port = 8080
 
 func main() {
-	r := gin.Default()
+	r := gin.New()
+	r.Use(
+		gin.Recovery(),
+		gin.LoggerWithWriter(gin.DefaultWriter, "/healthz"),
+	)
 
 	err := healthcheck.New(r, hc_config.DefaultConfig(), []checks.Check{})
 	if err != nil {
 		log.Fatalf("failed to initialize healthcheck: %v", err)
 	}
-	r.Use(
-		gin.Recovery(),
-		gin.LoggerWithWriter(gin.DefaultWriter, "/healthz"),
-	)
 
 	r.POST("/v1/street-manager-relay/sns", handleSNSMessage)
 
