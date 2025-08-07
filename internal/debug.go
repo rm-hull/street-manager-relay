@@ -26,11 +26,11 @@ func EnvironmentVars() {
 	})
 
 	for _, entry := range environ {
-		kv := strings.SplitN(entry, "=", 2)
-		if sensitiveRegex.MatchString(kv[0]) {
-			log.Printf("  %s: ********\n", kv[0])
+		key, value, _ := strings.Cut(entry, "=")
+		if sensitiveRegex.MatchString(key) {
+			log.Printf("  %s: ********\n", key)
 		} else {
-			log.Printf("  %s: %s\n", kv[0], kv[1])
+			log.Printf("  %s: %s\n", key, value)
 		}
 	}
 }
