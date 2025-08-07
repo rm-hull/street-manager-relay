@@ -84,7 +84,11 @@ func confirmSubscription(subscriptionURL string) error {
 	if err != nil {
 		return fmt.Errorf("failed to confirm subscription: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("error closing response body: %v\n", err)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("subscription confirmation failed with status: %d", resp.StatusCode)
