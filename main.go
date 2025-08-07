@@ -8,12 +8,26 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/rm-hull/street-manager-relay/internal"
+
+	"github.com/tavsec/gin-healthcheck/checks"
+
+	healthcheck "github.com/tavsec/gin-healthcheck"
+	hc_config "github.com/tavsec/gin-healthcheck/config"
 )
 
 const port = 3000
 
 func main() {
 	r := gin.Default()
+
+	err := healthcheck.New(r, hc_config.DefaultConfig(), []checks.Check{})
+	if err != nil {
+		log.Fatalf("failed to initialize healthcheck: %v", err)
+	}
+	r.Use(
+		gin.Recovery(),
+		gin.LoggerWithWriter(gin.DefaultWriter, "/healthz"),
+	)
 
 	r.POST("/v1/street-manager-relay/sns", handleSNSMessage)
 
