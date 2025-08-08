@@ -49,12 +49,12 @@ build: $(BINARY_NAME)
 
 $(BINARY_NAME): $(GO_BINDINGS)
 	@echo "Building Go binary..."
-	go build -tags=jsoniter -ldflags="-w -s" -o $(BINARY_NAME) .
+	go build -tags="jsoniter,sqlite_rtree" -ldflags="-w -s" -o $(BINARY_NAME) .
 
 # Run the application
 run: $(GO_BINDINGS)
 	@echo "Running application..."
-	go run ./...
+	go run -tags="jsoniter,sqlite_rtree" ./...
 
 # Test target (depends on generated bindings)
 test: $(GO_BINDINGS)

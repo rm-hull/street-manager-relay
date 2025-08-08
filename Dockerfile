@@ -13,6 +13,7 @@ RUN go mod download
 
 COPY . .
 
+ENV CGO_ENABLED=1
 ENV GOOS=linux
 
 RUN make build

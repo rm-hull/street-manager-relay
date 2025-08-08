@@ -1,0 +1,5 @@
+POST http://localhost:8080/v1/street-manager-relay/sns
+Content-Type: application/json
+x-amz-sns-message-type: 2
+
+< ./doc/real_events/32933.570.json
