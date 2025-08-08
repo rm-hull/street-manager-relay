@@ -52,8 +52,8 @@ func (repo *DbRepository) create() error {
 
 func (repo *DbRepository) tablesExists(table string) (bool, error) {
 	var exists bool
-	query := fmt.Sprintf("SELECT EXISTS (SELECT 1 FROM sqlite_master WHERE type='table' AND name='%s')", table)
-	err := repo.db.QueryRow(query).Scan(&exists)
+	query := "SELECT EXISTS (SELECT 1 FROM sqlite_master WHERE type='table' AND name=?)"
+	err := repo.db.QueryRow(query, table).Scan(&exists)
 	if err != nil && err != sql.ErrNoRows {
 		return false, err
 	}
