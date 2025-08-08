@@ -1,5 +1,10 @@
+### Post SNS messages to the Street Manager Relay API
 POST http://localhost:8080/v1/street-manager-relay/sns
 Content-Type: application/json
 x-amz-sns-message-type: 2
 
 < ./doc/real_events/32933.570.json
+
+
+### Search for activities within a bounding box
+GET http://localhost:8080/v1/street-manager-relay/search?bbox=418141,421232,441633,445228

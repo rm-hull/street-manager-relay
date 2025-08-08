@@ -60,6 +60,101 @@ func (repo *DbRepository) tablesExists(table string) (bool, error) {
 	return exists, nil
 }
 
+func (repo *DbRepository) Search(bbox *models.BBox) ([]models.Activity, error) {
+	if bbox == nil {
+		return nil, fmt.Errorf("bounding box is required")
+	}
+
+	query := `
+		SELECT a.activity_reference_number, a.usrn, a.street_name, a.area_name, a.town,
+		       a.highway_authority, a.highway_authority_swa_code, a.activity_coordinates,
+		       a.activity_location_type, a.activity_location_description, a.work_category,
+		       a.work_category_ref, a.work_status, a.work_status_ref,
+		       a.traffic_management_type, a.traffic_management_type_ref,
+		       a.current_traffic_management_type, a.current_traffic_management_type_ref,
+		       a.road_category, a.activity_type, a.activity_type_details,
+		       a.proposed_start_date, a.proposed_end_date,
+		       a.proposed_start_time, a.proposed_end_time,
+		       a.actual_start_date_time, a.actual_end_date_time,
+		       a.start_date, a.start_time, a.end_date, a.end_time,
+		       a.current_traffic_management_update_date,
+		       a.is_ttro_required, a.is_covid_19_response,
+		       a.is_traffic_sensitive, a.is_deemed,
+		       a.collaborative_working, a.cancelled,
+		       a.traffic_management_required
+		FROM activities AS a
+		INNER JOIN activities_rtree r ON a.id = r.id
+		WHERE r.minx <= ? AND r.maxx >= ? AND r.miny <= ? AND r.maxy >= ?`
+
+	// Correct parameter order: maxX, minX, maxY, minY (which seems counterintuitive)
+	rows, err := repo.db.Query(query, bbox.MaxX, bbox.MinX, bbox.MaxY, bbox.MinY)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute search query: %w", err)
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Error closing rows: %v", err)
+		}
+	}()
+
+	var activities []models.Activity
+	for rows.Next() {
+		var activity models.Activity
+
+		if err := rows.Scan(
+			&activity.ActivityReferenceNumber,
+			&activity.USRN,
+			&activity.StreetName,
+			&activity.AreaName,
+			&activity.Town,
+			&activity.HighwayAuthority,
+			&activity.HighwayAuthoritySwaCode,
+			&activity.ActivityCoordinates,
+			&activity.ActivityLocationType,
+			&activity.ActivityLocationDescription,
+			&activity.WorkCategory,
+			&activity.WorkCategoryRef,
+			&activity.WorkStatus,
+			&activity.WorkStatusRef,
+			&activity.TrafficManagementType,
+			&activity.TrafficManagementTypeRef,
+			&activity.CurrentTrafficManagementType,
+			&activity.CurrentTrafficManagementTypeRef,
+			&activity.RoadCategory,
+			&activity.ActivityType,
+			&activity.ActivityTypeDetails,
+			&activity.ProposedStartDate,
+			&activity.ProposedEndDate,
+			&activity.ProposedStartTime,
+			&activity.ProposedEndTime,
+			&activity.ActualStartDateTime,
+			&activity.ActualEndDateTime,
+			&activity.StartDate,
+			&activity.StartTime,
+			&activity.EndDate,
+			&activity.EndTime,
+			&activity.CurrentTrafficManagementUpdateDate,
+			&activity.IsTtroRequired,
+			&activity.IsCovid19Response,
+			&activity.IsTrafficSensitive,
+			&activity.IsDeemed,
+			&activity.CollaborativeWorking,
+			&activity.Cancelled,
+			&activity.TrafficManagementRequired,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan row: %w", err)
+		}
+
+		activities = append(activities, activity)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating over rows: %w", err)
+	}
+
+	return activities, nil
+}
+
 func (repo *DbRepository) Close() error {
 	if repo.db != nil {
 		return repo.db.Close()

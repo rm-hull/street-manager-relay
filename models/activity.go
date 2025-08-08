@@ -8,7 +8,7 @@ import (
 )
 
 type Activity struct {
-	ID                      int64   `json:"id"`
+	ID                      int64   `json:"-"`
 	ActivityReferenceNumber *string `json:"activity_reference_number,omitempty"`
 
 	// Location & authority info

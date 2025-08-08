@@ -76,6 +76,7 @@ func server(dataPath string, port int) {
 	}()
 
 	r.POST("/v1/street-manager-relay/sns", handleSNSMessage(repo, certManager))
+	r.GET("/v1/street-manager-relay/search", handleSearch(repo))
 
 	log.Printf("HTTP subscriber listening at http://localhost:%d", port)
 	if err := r.Run(fmt.Sprintf(":%d", port)); err != nil {
@@ -83,7 +84,26 @@ func server(dataPath string, port int) {
 	}
 }
 
-func handleSNSMessage(repo *internal.DbRepository, certManager internal.CertManager) func(c *gin.Context) {
+func handleSearch(repo *internal.DbRepository) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		bbox, err := models.BoundingBoxFromCSV(c.Query("bbox"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		activities, err := repo.Search(bbox)
+		if err != nil {
+			log.Printf("Error searching activities: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to search activities"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"activities": activities})
+	}
+}
+
+func handleSNSMessage(repo *internal.DbRepository, certManager internal.CertManager) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		messageType := c.GetHeader("x-amz-sns-message-type")
 		if messageType == "" {
