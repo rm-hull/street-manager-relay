@@ -222,8 +222,8 @@ func (repo *DbRepository) Upsert(activity *models.Activity) (int64, error) {
 }
 
 func tryRollback(err error, tx *sql.Tx) error {
-	if newErr := tx.Rollback(); newErr != nil {
-		return fmt.Errorf("failed to rollback transaction: %w", newErr)
+	if rbErr := tx.Rollback(); rbErr != nil {
+		return fmt.Errorf("failed to rollback transaction: %v; original error: %w", rbErr, err)
 	}
 	return err
 }
