@@ -17,12 +17,12 @@ type BBox struct {
 func BoundingBoxFromWKT(wktStr string) (*BBox, error) {
 	g, err := wkt.Unmarshal(wktStr)
 	if err != nil {
-		return &BBox{}, fmt.Errorf("failed to parse WKT: %w", err)
+		return nil, fmt.Errorf("failed to parse WKT: %w", err)
 	}
 
 	coords := g.FlatCoords()
 	if len(coords) < 2 {
-		return &BBox{}, fmt.Errorf("invalid coordinates")
+		return nil, fmt.Errorf("invalid coordinates")
 	}
 
 	minX, minY := math.MaxFloat64, math.MaxFloat64
