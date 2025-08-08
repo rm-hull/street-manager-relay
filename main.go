@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -76,7 +75,7 @@ func server(dataPath string, port int) {
 		}
 	}()
 
-	r.POST("/v1/street-manager-relay/sns", handleSNSMessage(repo, dataPath, certManager))
+	r.POST("/v1/street-manager-relay/sns", handleSNSMessage(repo, certManager))
 
 	log.Printf("HTTP subscriber listening at http://localhost:%d", port)
 	if err := r.Run(fmt.Sprintf(":%d", port)); err != nil {
@@ -84,12 +83,7 @@ func server(dataPath string, port int) {
 	}
 }
 
-func handleSNSMessage(repo *internal.DbRepository, dataPath string, certManager internal.CertManager) func(c *gin.Context) {
-	log.Printf("Storing incoming messages to path: %s", dataPath)
-	if err := os.MkdirAll(dataPath, 0755); err != nil {
-		log.Fatalf("Failed to create data directory: %v", err)
-	}
-
+func handleSNSMessage(repo *internal.DbRepository, certManager internal.CertManager) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		messageType := c.GetHeader("x-amz-sns-message-type")
 		if messageType == "" {
