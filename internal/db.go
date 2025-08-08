@@ -65,15 +65,6 @@ func (repo *DbRepository) Search(bbox *models.BBox) ([]models.Activity, error) {
 		return nil, fmt.Errorf("bounding box is required")
 	}
 
-	// Optional: Check if R-tree table exists
-	rtreeExists, err := repo.tablesExists("activities_rtree")
-	if err != nil {
-		return nil, fmt.Errorf("failed to check rtree table existence: %w", err)
-	}
-	if !rtreeExists {
-		return nil, fmt.Errorf("activities_rtree table does not exist")
-	}
-
 	query := `
 		SELECT a.activity_reference_number, a.usrn, a.street_name, a.area_name, a.town,
 		       a.highway_authority, a.highway_authority_swa_code, a.activity_coordinates,
@@ -90,13 +81,12 @@ func (repo *DbRepository) Search(bbox *models.BBox) ([]models.Activity, error) {
 		       a.is_ttro_required, a.is_covid_19_response,
 		       a.is_traffic_sensitive, a.is_deemed,
 		       a.collaborative_working, a.cancelled,
-		       a.traffic_management_required,
-		       r.minx, r.maxx, r.miny, r.maxy
+		       a.traffic_management_required
 		FROM activities AS a
 		INNER JOIN activities_rtree r ON a.id = r.id
 		WHERE r.minx <= ? AND r.maxx >= ? AND r.miny <= ? AND r.maxy >= ?`
 
-	// Correct parameter order: maxX, minX, maxY, minY
+	// Correct parameter order: maxX, minX, maxY, minY (which seems counterintuitive)
 	rows, err := repo.db.Query(query, bbox.MaxX, bbox.MinX, bbox.MaxY, bbox.MinY)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute search query: %w", err)
@@ -110,7 +100,6 @@ func (repo *DbRepository) Search(bbox *models.BBox) ([]models.Activity, error) {
 	var activities []models.Activity
 	for rows.Next() {
 		var activity models.Activity
-		var minx, maxx, miny, maxy float64 // For R-tree bounds
 
 		if err := rows.Scan(
 			&activity.ActivityReferenceNumber,
@@ -152,14 +141,9 @@ func (repo *DbRepository) Search(bbox *models.BBox) ([]models.Activity, error) {
 			&activity.CollaborativeWorking,
 			&activity.Cancelled,
 			&activity.TrafficManagementRequired,
-			&minx, &maxx, &miny, &maxy, // R-tree bounds
 		); err != nil {
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
-
-		// Optional: Add bounds to activity struct or log for debugging
-		log.Printf("Activity bounds: minx=%.5f, maxx=%.5f, miny=%.5f, maxy=%.5f",
-			minx, maxx, miny, maxy)
 
 		activities = append(activities, activity)
 	}
