@@ -117,12 +117,6 @@ func handleSNSMessage(repo *internal.DbRepository, dataPath string, certManager 
 			return
 		}
 
-		// if err := writeTimestampedFile(dataPath, bodyBytes); err != nil {
-		// 	log.Printf("Error writing file: %v", err)
-		// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to write file"})
-		// 	return
-		// }
-
 		valid, err := internal.IsValidSignature(&body, certManager)
 		if err != nil {
 			log.Printf("Error validating signature: %v", err)
