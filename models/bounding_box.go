@@ -67,9 +67,9 @@ func BoundingBoxFromCSV(bboxStr string) (*BBox, error) {
 	}
 
 	return &BBox{
-		MinX: bbox[0],
-		MaxX: bbox[2],
-		MinY: bbox[1],
-		MaxY: bbox[3],
+		MinX: math.Min(bbox[0], bbox[2]),
+		MaxX: math.Max(bbox[0], bbox[2]),
+		MinY: math.Min(bbox[1], bbox[3]),
+		MaxY: math.Max(bbox[1], bbox[3]),
 	}, nil
 }
