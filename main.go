@@ -92,16 +92,22 @@ func handleSNSMessage(dataPath string, certManager internal.CertManager) func(c 
 			return
 		}
 
-		if err := writeTimestampedFile(dataPath, bodyBytes); err != nil {
-			log.Printf("Error writing file: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to write file"})
-			return
-		}
-
 		var body internal.SNSMessage
 		if err := json.Unmarshal(bodyBytes, &body); err != nil {
 			log.Printf("Error parsing JSON: %v", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
+			return
+		}
+
+		// Only interested in activity topic messages (TODO: should really unsubscribe from others)
+		if body.TopicArn != "arn:aws:sns:eu-west-2:287813576808:prod-activity-topic" {
+			c.JSON(http.StatusAccepted, gin.H{"status": "ignored", "message": "Not processing notifications from this topic"})
+			return
+		}
+
+		if err := writeTimestampedFile(dataPath, bodyBytes); err != nil {
+			log.Printf("Error writing file: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to write file"})
 			return
 		}
 
