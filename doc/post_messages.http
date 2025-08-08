@@ -8,6 +8,3 @@ x-amz-sns-message-type: 2
 
 ### Search for activities within a bounding box
 GET http://localhost:8080/v1/street-manager-relay/search?bbox=418141,421232,441633,445228
-
-
-432590,404600,432600,404700
