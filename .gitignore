@@ -35,3 +35,4 @@ test-reports/
 generated/
 street-manager-relay
 __debug_bin*
+data/

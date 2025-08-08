@@ -12,7 +12,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/kofalt/go-memoize"
+	"github.com/rm-hull/street-manager-relay/generated"
 	"github.com/rm-hull/street-manager-relay/internal"
+	"github.com/rm-hull/street-manager-relay/models"
 	"github.com/spf13/cobra"
 
 	"github.com/tavsec/gin-healthcheck/checks"
@@ -64,7 +66,17 @@ func server(dataPath string, port int) {
 	cache := memoize.NewMemoizer(24*time.Hour, 1*time.Hour)
 	certManager := internal.NewCertManager(cache)
 
-	r.POST("/v1/street-manager-relay/sns", handleSNSMessage(dataPath, certManager))
+	repo, err := internal.NewDbRepository(filepath.Join(dataPath, "street-manager.db"))
+	if err != nil {
+		log.Fatalf("Failed to initialize db repository: %v", err)
+	}
+	defer func() {
+		if err := repo.Close(); err != nil {
+			log.Printf("Error closing database: %v", err)
+		}
+	}()
+
+	r.POST("/v1/street-manager-relay/sns", handleSNSMessage(repo, dataPath, certManager))
 
 	log.Printf("HTTP subscriber listening at http://localhost:%d", port)
 	if err := r.Run(fmt.Sprintf(":%d", port)); err != nil {
@@ -72,7 +84,7 @@ func server(dataPath string, port int) {
 	}
 }
 
-func handleSNSMessage(dataPath string, certManager internal.CertManager) func(c *gin.Context) {
+func handleSNSMessage(repo *internal.DbRepository, dataPath string, certManager internal.CertManager) func(c *gin.Context) {
 	log.Printf("Storing incoming messages to path: %s", dataPath)
 	if err := os.MkdirAll(dataPath, 0755); err != nil {
 		log.Fatalf("Failed to create data directory: %v", err)
@@ -105,12 +117,6 @@ func handleSNSMessage(dataPath string, certManager internal.CertManager) func(c 
 			return
 		}
 
-		if err := writeTimestampedFile(dataPath, bodyBytes); err != nil {
-			log.Printf("Error writing file: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to write file"})
-			return
-		}
-
 		valid, err := internal.IsValidSignature(&body, certManager)
 		if err != nil {
 			log.Printf("Error validating signature: %v", err)
@@ -124,7 +130,7 @@ func handleSNSMessage(dataPath string, certManager internal.CertManager) func(c 
 			return
 		}
 
-		if err := handleMessage(&body); err != nil {
+		if err := handleMessage(repo, &body); err != nil {
 			log.Printf("Error handling message: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to handle message"})
 			return
@@ -134,12 +140,12 @@ func handleSNSMessage(dataPath string, certManager internal.CertManager) func(c 
 	}
 }
 
-func handleMessage(body *internal.SNSMessage) error {
+func handleMessage(repo *internal.DbRepository, body *internal.SNSMessage) error {
 	switch body.Type {
 	case "SubscriptionConfirmation":
 		return confirmSubscription(body.SubscribeURL)
 	case "Notification":
-		return handleNotification(body)
+		return handleNotification(repo, body)
 	default:
 		log.Printf("Unknown message type: %s", body.Type)
 		return nil
@@ -166,29 +172,13 @@ func confirmSubscription(subscriptionURL string) error {
 	return nil
 }
 
-func handleNotification(body *internal.SNSMessage) error {
-	log.Printf("Received message from SNS: %s", body.Message)
-	return nil
-}
-
-func writeTimestampedFile(dataPath string, bodyBytes []byte) error {
-	now := time.Now()
-	dateDir := now.Format("2006-01-02") // YYYY-MM-DD format
-
-	fullDirPath := filepath.Join(dataPath, dateDir)
-
-	// Create the directory if it doesn't exist.
-	if err := os.MkdirAll(fullDirPath, 0755); err != nil {
-		return fmt.Errorf("failed to create directory: %w", err)
+func handleNotification(repo *internal.DbRepository, body *internal.SNSMessage) error {
+	event, err := generated.UnmarshalEventNotifierMessage([]byte(body.Message))
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal event: %w", err)
 	}
+	activity := models.NewActivityFrom(event)
+	_, err = repo.Upsert(activity)
 
-	epochMillis := now.UnixMilli()
-	fileName := fmt.Sprintf("%05d.%03d.json", (epochMillis/1000)%86_400, epochMillis%1000)
-	filePath := filepath.Join(fullDirPath, fileName)
-
-	if err := os.WriteFile(filePath, bodyBytes, 0644); err != nil {
-		return fmt.Errorf("failed to write file: %w", err)
-	}
-
-	return nil
+	return err
 }

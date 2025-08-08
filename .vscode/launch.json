@@ -10,7 +10,8 @@
             "request": "launch",
             "mode": "auto",
             "program": "main.go",
-            "args": []
+            "args": [],
+            "buildFlags": "-tags=jsoniter,sqlite_rtree"
         }
     ]
 }

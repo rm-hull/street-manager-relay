@@ -1,7 +1,7 @@
 FROM golang:1.24-alpine AS build
 
 RUN apk update && \
-    apk add --no-cache ca-certificates tzdata git make curl nodejs npm && \
+    apk add --no-cache ca-certificates tzdata git make curl nodejs npm build-base && \
     update-ca-certificates
 
 RUN adduser -D -g '' appuser
@@ -13,6 +13,7 @@ RUN go mod download
 
 COPY . .
 
+ENV CGO_ENABLED=1
 ENV GOOS=linux
 
 RUN make build
