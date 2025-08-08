@@ -3,6 +3,8 @@ package models
 import (
 	"fmt"
 	"math"
+	"strconv"
+	"strings"
 
 	"github.com/twpayne/go-geom/encoding/wkt"
 )
@@ -47,4 +49,27 @@ func BoundingBoxFromWKT(wktStr string) (*BBox, error) {
 	}
 
 	return &BBox{MinX: minX, MaxX: maxX, MinY: minY, MaxY: maxY}, nil
+}
+
+func BoundingBoxFromCSV(bboxStr string) (*BBox, error) {
+	bboxParts := strings.Split(bboxStr, ",")
+	if len(bboxParts) != 4 {
+		return nil, fmt.Errorf("bbox must have 4 comma-separated values")
+	}
+
+	bbox := make([]float64, 4)
+	for i, part := range bboxParts {
+		val, err := strconv.ParseFloat(strings.TrimSpace(part), 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid bbox value '%s': not a valid float", part)
+		}
+		bbox[i] = val
+	}
+
+	return &BBox{
+		MinX: bbox[0],
+		MaxX: bbox[2],
+		MinY: bbox[1],
+		MaxY: bbox[3],
+	}, nil
 }

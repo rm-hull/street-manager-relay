@@ -31,17 +31,17 @@ CREATE TABLE IF NOT EXISTS activities (
     activity_type_details TEXT,
 
     -- Dates/times
-    proposed_start_date TEXT,
-    proposed_end_date TEXT,
-    proposed_start_time TEXT,
-    proposed_end_time TEXT,
-    actual_start_date_time TEXT,
-    actual_end_date_time TEXT,
-    start_date TEXT,
-    start_time TEXT,
-    end_date TEXT,
-    end_time TEXT,
-    current_traffic_management_update_date TEXT,
+    proposed_start_date TIMESTAMP,
+    proposed_end_date TIMESTAMP,
+    proposed_start_time TIMESTAMP,
+    proposed_end_time TIMESTAMP,
+    actual_start_date_time TIMESTAMP,
+    actual_end_date_time TIMESTAMP,
+    start_date TIMESTAMP,
+    start_time TIMESTAMP,
+    end_date TIMESTAMP,
+    end_time TIMESTAMP,
+    current_traffic_management_update_date TIMESTAMP,
 
     -- Flags / booleans stored as text
     is_ttro_required TEXT,
