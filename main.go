@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/kofalt/go-memoize"
@@ -55,6 +56,7 @@ func server(dataPath string, port int) {
 	r.Use(
 		gin.Recovery(),
 		gin.LoggerWithWriter(gin.DefaultWriter, "/healthz"),
+		cors.Default(),
 	)
 
 	err := healthcheck.New(r, hc_config.DefaultConfig(), []checks.Check{})
