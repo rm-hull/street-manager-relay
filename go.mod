@@ -44,6 +44,7 @@ require (
 	github.com/earthboundkid/versioninfo/v2 v2.24.1
 	github.com/gabriel-vasile/mimetype v1.4.9 // indirect
 	github.com/gin-contrib/cors v1.7.6
+	github.com/gin-contrib/pprof v1.5.3
 	github.com/gin-contrib/sse v1.1.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect

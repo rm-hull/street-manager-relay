@@ -10,6 +10,7 @@ import (
 	"github.com/Depado/ginprom"
 	"github.com/aurowora/compress"
 	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/kofalt/go-memoize"
@@ -28,6 +29,7 @@ func main() {
 	var err error
 	var dbPath string
 	var port int
+	var debug bool
 
 	internal.ShowVersion()
 
@@ -40,19 +42,20 @@ func main() {
 		Use:   "http",
 		Short: "street manager relay server",
 		Run: func(cmd *cobra.Command, args []string) {
-			server(dbPath, port)
+			server(dbPath, port, debug)
 		},
 	}
 
 	rootCmd.Flags().StringVar(&dbPath, "db", "./data/street-manager.db", "Path to street-manager SQLite database")
 	rootCmd.Flags().IntVar(&port, "port", 8080, "Port to run HTTP server on")
+	rootCmd.Flags().BoolVar(&debug, "debug", false, "Enable debugging (pprof) - WARING: do not enable in production")
 
 	if err = rootCmd.Execute(); err != nil {
 		panic(err)
 	}
 }
 
-func server(dbPath string, port int) {
+func server(dbPath string, port int, debug bool) {
 
 	repo, err := internal.NewDbRepository(dbPath)
 	if err != nil {
@@ -79,6 +82,11 @@ func server(dbPath string, port int) {
 		compress.Compress(),
 		cors.Default(),
 	)
+
+	if debug {
+		log.Println("WARNING: pprof endpoints are enabled and exposed. Do not run with this flag in production.")
+		pprof.Register(r)
+	}
 
 	err = healthcheck.New(r, hc_config.DefaultConfig(), []checks.Check{
 		repo.HealthCheck(),
