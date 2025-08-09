@@ -12,6 +12,15 @@
             "program": "main.go",
             "args": ["api-server"],
             "buildFlags": "-tags=jsoniter,sqlite_rtree"
+        },
+        {
+            "name": "Launch bulk loader",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "main.go",
+            "args": ["bulk-loader", "data/archive/"],
+            "buildFlags": "-tags=jsoniter,sqlite_rtree"
         }
     ]
 }
