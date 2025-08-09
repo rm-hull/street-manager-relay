@@ -27,6 +27,8 @@ func main() {
 		Long: `Street manager relay API & data importers`,
 	}
 
+	rootCmd.PersistentFlags().StringVar(&dbPath, "db", "./data/street-manager.db", "Path to street-manager SQLite database")
+
 	apiServerCmd := &cobra.Command{
 		Use:   "api-server [--db <path>] [--port <port>] [--debug]",
 		Short: "Start HTTP API server",
@@ -35,23 +37,19 @@ func main() {
 		},
 	}
 
-	apiServerCmd.Flags().StringVar(&dbPath, "db", "./data/street-manager.db", "Path to street-manager SQLite database")
 	apiServerCmd.Flags().IntVar(&port, "port", 8080, "Port to run HTTP server on")
 	apiServerCmd.Flags().BoolVar(&debug, "debug", false, "Enable debugging (pprof) - WARING: do not enable in production")
 
 	bulkLoaderCmd := &cobra.Command{
 		Use:   "bulk-loader [--db <path>] <folder>",
 		Short: "Run bulk data loader",
+		Args:  cobra.ExactArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
-			if len(args) < 1 {
-				log.Fatal("You must specify a folder containing the data to load")
-			}
 			if err := cmd.BulkLoader(dbPath, args[0]); err != nil {
 				log.Fatalf("Failed to run bulk loader: %v", err)
 			}
 		},
 	}
-	bulkLoaderCmd.Flags().StringVar(&dbPath, "db", "./data/street-manager.db", "Path to street-manager SQLite database")
 
 	rootCmd.AddCommand(apiServerCmd)
 	rootCmd.AddCommand(bulkLoaderCmd)
