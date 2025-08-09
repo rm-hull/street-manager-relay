@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"path/filepath"
 	"time"
 
-	"github.com/aurowora/compress"
 	"github.com/Depado/ginprom"
+	"github.com/aurowora/compress"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -27,7 +26,7 @@ import (
 
 func main() {
 	var err error
-	var dataPath string
+	var dbPath string
 	var port int
 
 	internal.ShowVersion()
@@ -41,11 +40,11 @@ func main() {
 		Use:   "http",
 		Short: "street manager relay server",
 		Run: func(cmd *cobra.Command, args []string) {
-			server(dataPath, port)
+			server(dbPath, port)
 		},
 	}
 
-	rootCmd.Flags().StringVar(&dataPath, "data", "./data", "Path storaege for incoming messages")
+	rootCmd.Flags().StringVar(&dbPath, "db", "./data/street-manager.db", "Path to street-manager SQLite database")
 	rootCmd.Flags().IntVar(&port, "port", 8080, "Port to run HTTP server on")
 
 	if err = rootCmd.Execute(); err != nil {
@@ -53,9 +52,8 @@ func main() {
 	}
 }
 
-func server(dataPath string, port int) {
+func server(dbPath string, port int) {
 
-	dbPath := filepath.Join(dataPath, "street-manager.db")
 	repo, err := internal.NewDbRepository(dbPath)
 	if err != nil {
 		log.Fatalf("Failed to initialize db repository: %v", err)
