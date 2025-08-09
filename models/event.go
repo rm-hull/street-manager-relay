@@ -13,86 +13,94 @@ type Event struct {
 	EventType       string `json:"event_type"`
 
 	// Core location and authority info
-	USRN                    *string `json:"usrn"`
-	StreetName              *string `json:"street_name"`
-	AreaName                *string `json:"area_name"`
-	Town                    *string `json:"town"`
-	HighwayAuthority        *string `json:"highway_authority"`
-	HighwayAuthoritySWACode *string `json:"highway_authority_swa_code"`
+	USRN                    *string `json:"usrn,omitempty"`
+	StreetName              *string `json:"street_name,omitempty"`
+	AreaName                *string `json:"area_name,omitempty"`
+	Town                    *string `json:"town,omitempty"`
+	HighwayAuthority        *string `json:"highway_authority,omitempty"`
+	HighwayAuthoritySWACode *string `json:"highway_authority_swa_code,omitempty"`
 
 	// Activity / work / permit references
-	ActivityReferenceNumber  *string `json:"activity_reference_number"`
-	WorkReferenceNumber      *string `json:"work_reference_number"`
-	Section58ReferenceNumber *string `json:"section_58_reference_number"`
-	PermitReferenceNumber    *string `json:"permit_reference_number"`
-	PromoterSWACode          *string `json:"promoter_swa_code"`
-	PromoterOrganisation     *string `json:"promoter_organisation"`
+	ActivityReferenceNumber  *string `json:"activity_reference_number,omitempty"`
+	WorkReferenceNumber      *string `json:"work_reference_number,omitempty"`
+	Section58ReferenceNumber *string `json:"section_58_reference_number,omitempty"`
+	PermitReferenceNumber    *string `json:"permit_reference_number,omitempty"`
+	PromoterSWACode          *string `json:"promoter_swa_code,omitempty"`
+	PromoterOrganisation     *string `json:"promoter_organisation,omitempty"`
 
 	// Coordinates & descriptions
-	ActivityCoordinates         *string `json:"activity_coordinates"`
-	ActivityLocationType        *string `json:"activity_location_type"`
-	ActivityLocationDescription *string `json:"activity_location_description"`
-	WorksLocationCoordinates    *string `json:"works_location_coordinates"`
-	WorksLocationType           *string `json:"works_location_type"`
-	Section58Coordinates        *string `json:"section_58_coordinates"`
-	Section58LocationType       *string `json:"section_58_location_type"`
+	ActivityCoordinates         *string `json:"activity_coordinates,omitempty"`
+	ActivityLocationType        *string `json:"activity_location_type,omitempty"`
+	ActivityLocationDescription *string `json:"activity_location_description,omitempty"`
+	WorksLocationCoordinates    *string `json:"works_location_coordinates,omitempty"`
+	WorksLocationType           *string `json:"works_location_type,omitempty"`
+	Section58Coordinates        *string `json:"section_58_coordinates,omitempty"`
+	Section58LocationType       *string `json:"section_58_location_type,omitempty"`
 
 	// Categories & types
-	WorkCategory                    *string `json:"work_category"`
-	WorkCategoryRef                 *string `json:"work_category_ref"`
-	WorkStatus                      *string `json:"work_status"`
-	WorkStatusRef                   *string `json:"work_status_ref"`
-	TrafficManagementType           *string `json:"traffic_management_type"`
-	TrafficManagementTypeRef        *string `json:"traffic_management_type_ref"`
-	CurrentTrafficManagementType    *string `json:"current_traffic_management_type"`
-	CurrentTrafficManagementTypeRef *string `json:"current_traffic_management_type_ref"`
-	RoadCategory                    *string `json:"road_category"`
-	ActivityType                    *string `json:"activity_type"`
-	ActivityTypeDetails             *string `json:"activity_type_details"`
-	Section58Status                 *string `json:"section_58_status"`
-	Section58Duration               *string `json:"section_58_duration"`
-	Section58Extent                 *string `json:"section_58_extent"`
+	WorkCategory                    *string `json:"work_category,omitempty"`
+	WorkCategoryRef                 *string `json:"work_category_ref,omitempty"`
+	WorkStatus                      *string `json:"work_status,omitempty"`
+	WorkStatusRef                   *string `json:"work_status_ref,omitempty"`
+	TrafficManagementType           *string `json:"traffic_management_type,omitempty"`
+	TrafficManagementTypeRef        *string `json:"traffic_management_type_ref,omitempty"`
+	CurrentTrafficManagementType    *string `json:"current_traffic_management_type,omitempty"`
+	CurrentTrafficManagementTypeRef *string `json:"current_traffic_management_type_ref,omitempty"`
+	RoadCategory                    *string `json:"road_category,omitempty"`
+	ActivityType                    *string `json:"activity_type,omitempty"`
+	ActivityTypeDetails             *string `json:"activity_type_details,omitempty"`
+	Section58Status                 *string `json:"section_58_status,omitempty"`
+	Section58Duration               *string `json:"section_58_duration,omitempty"`
+	Section58Extent                 *string `json:"section_58_extent,omitempty"`
 
 	// Dates/times
-	ProposedStartDate                  *time.Time `json:"proposed_start_date"`
-	ProposedEndDate                    *time.Time `json:"proposed_end_date"`
-	ProposedStartTime                  *time.Time `json:"proposed_start_time"`
-	ProposedEndTime                    *time.Time `json:"proposed_end_time"`
-	ActualStartDateTime                *time.Time `json:"actual_start_date_time"`
-	ActualEndDateTime                  *time.Time `json:"actual_end_date_time"`
-	StartDate                          *time.Time `json:"start_date"`
-	StartTime                          *time.Time `json:"start_time"`
-	EndDate                            *time.Time `json:"end_date"`
-	EndTime                            *time.Time `json:"end_time"`
-	CurrentTrafficManagementUpdateDate *time.Time `json:"current_traffic_management_update_date"`
+	ProposedStartDate                  *time.Time `json:"proposed_start_date,omitempty"`
+	ProposedEndDate                    *time.Time `json:"proposed_end_date,omitempty"`
+	ProposedStartTime                  *time.Time `json:"proposed_start_time,omitempty"`
+	ProposedEndTime                    *time.Time `json:"proposed_end_time,omitempty"`
+	ActualStartDateTime                *time.Time `json:"actual_start_date_time,omitempty"`
+	ActualEndDateTime                  *time.Time `json:"actual_end_date_time,omitempty"`
+	StartDate                          *time.Time `json:"start_date,omitempty"`
+	StartTime                          *time.Time `json:"start_time,omitempty"`
+	EndDate                            *time.Time `json:"end_date,omitempty"`
+	EndTime                            *time.Time `json:"end_time,omitempty"`
+	CurrentTrafficManagementUpdateDate *time.Time `json:"current_traffic_management_update_date,omitempty"`
 
 	// Flags / booleans stored as text
-	IsTTRORequired            *string `json:"is_ttro_required"`
-	IsCovid19Response         *string `json:"is_covid_19_response"`
-	IsTrafficSensitive        *string `json:"is_traffic_sensitive"`
-	IsDeemed                  *string `json:"is_deemed"`
-	CollaborativeWorking      *string `json:"collaborative_working"`
-	Cancelled                 *string `json:"cancelled"`
-	TrafficManagementRequired *string `json:"traffic_management_required"`
+	IsTTRORequired            *string `json:"is_ttro_required,omitempty"`
+	IsCovid19Response         *string `json:"is_covid_19_response,omitempty"`
+	IsTrafficSensitive        *string `json:"is_traffic_sensitive,omitempty"`
+	IsDeemed                  *string `json:"is_deemed,omitempty"`
+	CollaborativeWorking      *string `json:"collaborative_working,omitempty"`
+	Cancelled                 *string `json:"cancelled,omitempty"`
+	TrafficManagementRequired *string `json:"traffic_management_required,omitempty"`
 
 	// Misc attributes
-	PermitConditions     *string `json:"permit_conditions"`
-	PermitStatus         *string `json:"permit_status"`
-	CollaborationType    *string `json:"collaboration_type"`
-	CollaborationTypeRef *string `json:"collaboration_type_ref"`
-	CloseFootway         *string `json:"close_footway"`
-	CloseFootwayRef      *string `json:"close_footway_ref"`
+	PermitConditions     *string `json:"permit_conditions,omitempty"`
+	PermitStatus         *string `json:"permit_status,omitempty"`
+	CollaborationType    *string `json:"collaboration_type,omitempty"`
+	CollaborationTypeRef *string `json:"collaboration_type_ref,omitempty"`
+	CloseFootway         *string `json:"close_footway,omitempty"`
+	CloseFootwayRef      *string `json:"close_footway_ref,omitempty"`
 }
 
 func (event *Event) BoundingBox() (*BBox, error) {
-	if event.ActivityCoordinates == nil || *event.ActivityCoordinates == "" {
-		return nil, fmt.Errorf("activity coordinates are required to calculate bounding box")
+	fields := []*string{
+		event.WorksLocationCoordinates,
+		event.ActivityCoordinates,
+		event.Section58Coordinates,
 	}
 
-	return BoundingBoxFromWKT(*event.ActivityCoordinates)
+	for _, coords := range fields {
+		if coords != nil && *coords != "" {
+			return BoundingBoxFromWKT(*coords)
+		}
+	}
+
+	return nil, fmt.Errorf("no coordinates found for bounding box calculation")
 }
 
-func NewActivityFrom(event generated.EventNotifierMessage) *Event {
+func NewEventFrom(event generated.EventNotifierMessage) *Event {
 	objectData := event.ObjectData
 	// Convert the generated EventNotifierMessage to our event model
 	return &Event{
@@ -108,7 +116,12 @@ func NewActivityFrom(event generated.EventNotifierMessage) *Event {
 		HighwayAuthoritySWACode: &objectData.HighwayAuthoritySwaCode,
 
 		// Activity / work / permit references
-		ActivityReferenceNumber: objectData.ActivityReferenceNumber,
+		ActivityReferenceNumber:  objectData.ActivityReferenceNumber,
+		PermitReferenceNumber:    objectData.PermitReferenceNumber,
+		WorkReferenceNumber:      objectData.WorkReferenceNumber,
+		Section58ReferenceNumber: objectData.Section58_ReferenceNumber,
+		PromoterSWACode:          objectData.PromoterSwaCode,
+		PromoterOrganisation:     objectData.PromoterOrganisation,
 
 		// Coordinates & descriptions
 		WorksLocationCoordinates:    objectData.WorksLocationCoordinates,

@@ -82,14 +82,14 @@ func handleSearch(repo *internal.DbRepository) gin.HandlerFunc {
 			return
 		}
 
-		activities, err := repo.Search(bbox)
+		events, err := repo.Search(bbox)
 		if err != nil {
-			log.Printf("Error searching activities: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to search activities"})
+			log.Printf("Error searching events: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to search events"})
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"activities": activities})
+		c.JSON(http.StatusOK, gin.H{"events": events})
 	}
 }
 
@@ -112,12 +112,6 @@ func handleSNSMessage(repo *internal.DbRepository, certManager internal.CertMana
 		if err := json.Unmarshal(bodyBytes, &body); err != nil {
 			log.Printf("Error parsing JSON: %v", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
-			return
-		}
-
-		// Only interested in activity topic messages (TODO: should really unsubscribe from others)
-		if body.TopicArn != "arn:aws:sns:eu-west-2:287813576808:prod-activity-topic" {
-			c.JSON(http.StatusAccepted, gin.H{"status": "ignored", "message": "Not processing notifications from this topic"})
 			return
 		}
 
@@ -187,7 +181,7 @@ func handleNotification(repo *internal.DbRepository, body *internal.SNSMessage) 
 		return fmt.Errorf("failed to create batch upserter: %w", err)
 	}
 
-	if _, err = batch.Upsert(models.NewActivityFrom(event)); err != nil {
+	if _, err = batch.Upsert(models.NewEventFrom(event)); err != nil {
 		return fmt.Errorf("failed to upsert: %w", batch.Abort(err))
 	}
 

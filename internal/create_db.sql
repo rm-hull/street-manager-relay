@@ -77,14 +77,14 @@ CREATE TABLE IF NOT EXISTS events (
 
 -- Composite index for actual date range queries
 CREATE INDEX IF NOT EXISTS idx_events_actual_range
-    ON activities(actual_start_date_time, actual_end_date_time);
+    ON events(actual_start_date_time, actual_end_date_time);
 
 -- Composite index for planned date range queries
 CREATE INDEX IF NOT EXISTS idx_events_planned_range
-    ON activities(start_date, end_date);
+    ON events(start_date, end_date);
 
 -- Unique index (implicit from UNIQUE constraint, but can be named explicitly)
-CREATE UNIQUE INDEX IF NOT EXISTS idx_events_ref ON events(ref);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_events_object_reference ON events(object_reference);
 
 -- R-Tree index table for bounding boxes
 CREATE VIRTUAL TABLE IF NOT EXISTS events_rtree USING rtree(
