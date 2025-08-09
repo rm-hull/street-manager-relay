@@ -29,6 +29,7 @@ func BulkLoader(dbPath string, folder string, maxRecords int) error {
 		}
 	}()
 
+	log.Println("Finding files to import...")
 	files, err := walkFiles(folder, maxRecords)
 	if err != nil {
 		return fmt.Errorf("failed to import data: %w", err)
@@ -57,9 +58,9 @@ func BulkLoader(dbPath string, folder string, maxRecords int) error {
 			return fmt.Errorf("could not load file %s: %w", file, batch.Abort(err))
 		}
 
-		_, err = batch.Upsert(models.NewActivityFrom(*event))
+		_, err = batch.Upsert(models.NewEventFrom(*event))
 		if err != nil {
-			return fmt.Errorf("failed to upsert activity from file %s: %w", file, batch.Abort(err))
+			return fmt.Errorf("failed to upsert event from file %s: %w", file, batch.Abort(err))
 		}
 
 		if isDocker && idx%37 == 0 {
@@ -71,7 +72,7 @@ func BulkLoader(dbPath string, folder string, maxRecords int) error {
 
 // walkFiles recursively walks through a folder and returns the relative paths for files.
 func walkFiles(root string, maxFiles int) ([]string, error) {
-	var files []string
+	files := make([]string, 0, 1000)
 
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
