@@ -22,33 +22,13 @@ func BoundingBoxFromWKT(wktStr string) (*BBox, error) {
 		return nil, fmt.Errorf("failed to parse WKT: %w", err)
 	}
 
-	coords := g.FlatCoords()
-	if len(coords) < 2 {
-		return nil, fmt.Errorf("invalid coordinates")
-	}
-
-	minX, minY := math.MaxFloat64, math.MaxFloat64
-	maxX, maxY := -math.MaxFloat64, -math.MaxFloat64
-
-	for i := 0; i < len(coords); i += 2 {
-		x := coords[i]
-		y := coords[i+1]
-
-		if x < minX {
-			minX = x
-		}
-		if y < minY {
-			minY = y
-		}
-		if x > maxX {
-			maxX = x
-		}
-		if y > maxY {
-			maxY = y
-		}
-	}
-
-	return &BBox{MinX: minX, MaxX: maxX, MinY: minY, MaxY: maxY}, nil
+	bounds := g.Bounds()
+	return &BBox{
+		MinX: bounds.Min(0),
+		MaxX: bounds.Max(0),
+		MinY: bounds.Min(1),
+		MaxY: bounds.Max(1),
+	}, nil
 }
 
 func BoundingBoxFromCSV(bboxStr string) (*BBox, error) {

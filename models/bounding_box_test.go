@@ -39,6 +39,14 @@ func TestBoundingBoxFromWKT(t *testing.T) {
 				MinY: 0, MaxY: 5,
 			},
 		},
+		{
+			name: "Polygon Z",
+			wkt:  "POLYGON Z ((519486.91227482 257914.829213376 0,519486.371896552 257906.61227976 0,519503.134927786 257904.454717125 0,519504.067150431 257912.782373436 0,519486.91227482 257914.829213376 0))",
+			expected: BBox{
+				MinX: 519486.371896552, MaxX: 519504.067150431,
+				MinY: 257904.454717125, MaxY: 257914.829213376,
+			},
+		},
 	}
 
 	const tol = 1e-9 // tolerance for float comparisons
