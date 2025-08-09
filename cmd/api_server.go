@@ -181,8 +181,15 @@ func handleNotification(repo *internal.DbRepository, body *internal.SNSMessage) 
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal event: %w", err)
 	}
-	activity := models.NewActivityFrom(event)
-	_, err = repo.Upsert(activity)
 
-	return err
+	batch, err := repo.BatchUpsert()
+	if err != nil {
+		return fmt.Errorf("failed to create batch upserter: %w", err)
+	}
+
+	if _, err = batch.Upsert(models.NewActivityFrom(event)); err != nil {
+		return fmt.Errorf("failed to upsert: %w", batch.Abort(err))
+	}
+
+	return batch.Done()
 }

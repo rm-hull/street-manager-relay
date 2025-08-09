@@ -19,6 +19,11 @@ type DbRepository struct {
 	db *sql.DB
 }
 
+type Batch struct {
+	tx   *sql.Tx
+	stmt *sql.Stmt
+}
+
 func NewDbRepository(dbPath string) (*DbRepository, error) {
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
@@ -169,17 +174,7 @@ func (repo *DbRepository) HealthCheck() checks.Check {
 	}
 }
 
-// inserts or updates an Activity based on activity_reference_number.
-func (repo *DbRepository) Upsert(activity *models.Activity) (int64, error) {
-	if activity.ActivityReferenceNumber == nil || *activity.ActivityReferenceNumber == "" {
-		return 0, fmt.Errorf("activity_reference_number is required")
-	}
-
-	bbox, err := activity.BoundingBox()
-	if err != nil {
-		return 0, fmt.Errorf("failed to calculate bounding box: %w", err)
-	}
-
+func (repo *DbRepository) BatchUpsert() (*Batch, error) {
 	cols := []string{
 		"activity_reference_number",
 		"usrn",
@@ -247,6 +242,33 @@ func (repo *DbRepository) Upsert(activity *models.Activity) (int64, error) {
 		%s
 	`, strings.Join(cols, ", "), strings.Join(placeholders, ", "), strings.Join(updateSet, ", "))
 
+	tx, err := repo.db.Begin()
+	if err != nil {
+		return nil, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+
+	stmt, err := tx.Prepare(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare statement: %w", err)
+	}
+
+	return &Batch{
+		tx:   tx,
+		stmt: stmt,
+	}, nil
+}
+
+// inserts or updates an Activity based on activity_reference_number.
+func (batch *Batch) Upsert(activity *models.Activity) (int64, error) {
+	if activity.ActivityReferenceNumber == nil || *activity.ActivityReferenceNumber == "" {
+		return 0, fmt.Errorf("activity_reference_number is required")
+	}
+
+	bbox, err := activity.BoundingBox()
+	if err != nil {
+		return 0, fmt.Errorf("failed to calculate bounding box: %w", err)
+	}
+
 	// Extract values from struct
 	values := []any{
 		activity.ActivityReferenceNumber,
@@ -297,46 +319,52 @@ func (repo *DbRepository) Upsert(activity *models.Activity) (int64, error) {
 		activity.CloseFootwayRef,
 	}
 
-	tx, err := repo.db.Begin()
+	res, err := batch.stmt.Exec(values...)
 	if err != nil {
-		return 0, fmt.Errorf("failed to begin transaction: %w", err)
-	}
-
-	res, err := tx.Exec(query, values...)
-	if err != nil {
-		return 0, tryRollback(fmt.Errorf("failed to execute upsert query: %w", err), tx)
+		return 0, fmt.Errorf("failed to execute upsert query: %w", err)
 	}
 
 	id, err := res.LastInsertId()
 	if err != nil {
-		return 0, tryRollback(fmt.Errorf("failed to get last insert id: %w", err), tx)
+		return 0, fmt.Errorf("failed to get last insert id: %w", err)
 	}
 
-	err = upsertRTree(tx, id, *bbox)
+	err = batch.upsertRTree(id, *bbox)
 	if err != nil {
-		return 0, tryRollback(fmt.Errorf("failed to insert into R-tree: %w", err), tx)
+		return 0, fmt.Errorf("failed to insert into R-tree: %w", err)
 	}
 
-	if err := tx.Commit(); err != nil {
-		return 0, err
-	}
 	return id, nil
 }
 
-func tryRollback(err error, tx *sql.Tx) error {
-	if rbErr := tx.Rollback(); rbErr != nil {
+func (batch *Batch) Done() error {
+	if commitErr := batch.tx.Commit(); commitErr != nil {
+		return fmt.Errorf("failed to commit transaction: %w", commitErr)
+	}
+
+	if batch.stmt != nil {
+		if closeErr := batch.stmt.Close(); closeErr != nil {
+			return fmt.Errorf("failed to close statement: %w", closeErr)
+		}
+	}
+
+	return nil
+}
+
+func (batch *Batch) Abort(err error) error {
+	if rbErr := batch.tx.Rollback(); rbErr != nil {
 		return fmt.Errorf("failed to rollback transaction: %v; original error: %w", rbErr, err)
 	}
 	return err
 }
 
-func upsertRTree(tx *sql.Tx, id int64, bbox models.BBox) error {
-	_, err := tx.Exec(`DELETE FROM activities_rtree WHERE id = ?`, id)
+func (batch *Batch) upsertRTree(id int64, bbox models.BBox) error {
+	_, err := batch.tx.Exec(`DELETE FROM activities_rtree WHERE id = ?`, id)
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.Exec(
+	_, err = batch.tx.Exec(
 		`INSERT INTO activities_rtree (id, minx, maxx, miny, maxy) VALUES (?, ?, ?, ?, ?)`,
 		id, bbox.MinX, bbox.MaxX, bbox.MinY, bbox.MaxY,
 	)

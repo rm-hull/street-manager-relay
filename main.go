@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"math"
 
 	"github.com/joho/godotenv"
 	"github.com/rm-hull/street-manager-relay/cmd"
@@ -14,6 +15,7 @@ func main() {
 	var dbPath string
 	var port int
 	var debug bool
+	var maxFiles int
 
 	internal.ShowVersion()
 
@@ -41,15 +43,17 @@ func main() {
 	apiServerCmd.Flags().BoolVar(&debug, "debug", false, "Enable debugging (pprof) - WARING: do not enable in production")
 
 	bulkLoaderCmd := &cobra.Command{
-		Use:   "bulk-loader [--db <path>] <folder>",
+		Use:   "bulk-loader [--db <path>] [--max-files <n>] <folder>",
 		Short: "Run bulk data loader",
 		Args:  cobra.ExactArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
-			if err := cmd.BulkLoader(dbPath, args[0]); err != nil {
+			if err := cmd.BulkLoader(dbPath, args[0], maxFiles); err != nil {
 				log.Fatalf("Failed to run bulk loader: %v", err)
 			}
 		},
 	}
+
+	bulkLoaderCmd.Flags().IntVar(&maxFiles, "max-files", math.MaxInt64, "Maximum number of files to process")
 
 	rootCmd.AddCommand(apiServerCmd)
 	rootCmd.AddCommand(bulkLoaderCmd)

@@ -19,7 +19,7 @@
             "request": "launch",
             "mode": "auto",
             "program": "main.go",
-            "args": ["bulk-loader", "./data/archive/"],
+            "args": ["bulk-loader", "./data/archive/activities", "--max-files", "10"],
             "buildFlags": "-tags=jsoniter,sqlite_rtree"
         }
     ]
