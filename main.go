@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/aurowora/compress"
+	"github.com/Depado/ginprom"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -66,9 +67,17 @@ func server(dataPath string, port int) {
 	}()
 
 	r := gin.New()
+
+	prometheus := ginprom.New(
+		ginprom.Engine(r),
+		ginprom.Path("/metrics"),
+		ginprom.Ignore("/healthz"),
+	)
+
 	r.Use(
 		gin.Recovery(),
-		gin.LoggerWithWriter(gin.DefaultWriter, "/healthz"),
+		gin.LoggerWithWriter(gin.DefaultWriter, "/healthz", "/metrics"),
+		prometheus.Instrument(),
 		compress.Compress(),
 		cors.Default(),
 	)
