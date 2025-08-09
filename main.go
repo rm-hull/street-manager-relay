@@ -93,10 +93,10 @@ func server(dbPath string, port int) {
 	r.POST("/v1/street-manager-relay/sns", handleSNSMessage(repo, certManager))
 	r.GET("/v1/street-manager-relay/search", handleSearch(repo))
 
-	log.Printf("HTTP subscriber listening at http://localhost:%d", port)
-	if err := r.Run(fmt.Sprintf(":%d", port)); err != nil {
-		log.Fatal("Failed to start server:", err)
-	}
+	addr := fmt.Sprintf(":%d", port)
+	log.Printf("Starting HTTP API Server on port %d...", port)
+	err = r.Run(addr)
+	log.Fatalf("HTTP API Server failed to start on port %d: %v", port, err)
 }
 
 func handleSearch(repo *internal.DbRepository) gin.HandlerFunc {
