@@ -53,7 +53,7 @@ func main() {
 		},
 	}
 
-	bulkLoaderCmd.Flags().IntVar(&maxFiles, "max-files", math.MaxInt64, "Maximum number of files to process")
+	bulkLoaderCmd.Flags().IntVar(&maxFiles, "max-files", math.MaxInt, "Maximum number of files to process")
 
 	rootCmd.AddCommand(apiServerCmd)
 	rootCmd.AddCommand(bulkLoaderCmd)

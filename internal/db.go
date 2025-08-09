@@ -342,12 +342,6 @@ func (batch *Batch) Done() error {
 		return fmt.Errorf("failed to commit transaction: %w", commitErr)
 	}
 
-	if batch.stmt != nil {
-		if closeErr := batch.stmt.Close(); closeErr != nil {
-			return fmt.Errorf("failed to close statement: %w", closeErr)
-		}
-	}
-
 	return nil
 }
 

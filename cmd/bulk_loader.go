@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
@@ -72,19 +73,22 @@ func BulkLoader(dbPath string, folder string, maxRecords int) error {
 func walkFiles(root string, maxFiles int) ([]string, error) {
 	var files []string
 
-	// Walk through the root directory and subdirectories.
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
-		// Only add files, not directories.
-		if !info.IsDir() && len(files) < maxFiles {
+		if len(files) >= maxFiles {
+			return fs.SkipAll
+		}
+
+		if !info.IsDir() {
 			files = append(files, path)
 		}
 
 		return nil
 	})
+
 	if err != nil {
 		return nil, err
 	}
