@@ -66,30 +66,30 @@ func (repo *DbRepository) tablesExists(table string) (bool, error) {
 	return exists, nil
 }
 
-func (repo *DbRepository) Search(bbox *models.BBox) ([]models.Activity, error) {
+func (repo *DbRepository) Search(bbox *models.BBox) ([]models.Event, error) {
 	if bbox == nil {
 		return nil, fmt.Errorf("bounding box is required")
 	}
 
 	query := `
-		SELECT a.activity_reference_number, a.usrn, a.street_name, a.area_name, a.town,
-		       a.highway_authority, a.highway_authority_swa_code, a.activity_coordinates,
-		       a.activity_location_type, a.activity_location_description, a.work_category,
-		       a.work_category_ref, a.work_status, a.work_status_ref,
-		       a.traffic_management_type, a.traffic_management_type_ref,
-		       a.current_traffic_management_type, a.current_traffic_management_type_ref,
-		       a.road_category, a.activity_type, a.activity_type_details,
-		       a.proposed_start_date, a.proposed_end_date,
-		       a.proposed_start_time, a.proposed_end_time,
-		       a.actual_start_date_time, a.actual_end_date_time,
-		       a.start_date, a.start_time, a.end_date, a.end_time,
-		       a.current_traffic_management_update_date,
-		       a.is_ttro_required, a.is_covid_19_response,
-		       a.is_traffic_sensitive, a.is_deemed,
-		       a.collaborative_working, a.cancelled,
-		       a.traffic_management_required
-		FROM activities AS a
-		INNER JOIN activities_rtree r ON a.id = r.id
+		SELECT e.activity_reference_number, e.usrn, e.street_name, e.area_name, e.town,
+		       e.highway_authority, e.highway_authority_swa_code, e.activity_coordinates,
+		       e.activity_location_type, e.activity_location_description, e.work_category,
+		       e.work_category_ref, e.work_status, e.work_status_ref,
+		       e.traffic_management_type, e.traffic_management_type_ref,
+		       e.current_traffic_management_type, e.current_traffic_management_type_ref,
+		       e.road_category, e.activity_type, e.activity_type_details,
+		       e.proposed_start_date, e.proposed_end_date,
+		       e.proposed_start_time, e.proposed_end_time,
+		       e.actual_start_date_time, e.actual_end_date_time,
+		       e.start_date, e.start_time, e.end_date, e.end_time,
+		       e.current_traffic_management_update_date,
+		       e.is_ttro_required, e.is_covid_19_response,
+		       e.is_traffic_sensitive, e.is_deemed,
+		       e.collaborative_working, e.cancelled,
+		       e.traffic_management_required
+		FROM events AS e
+		INNER JOIN events_rtree r ON e.id = r.id
 		WHERE r.minx <= ? AND r.maxx >= ? AND r.miny <= ? AND r.maxy >= ?`
 
 	// Correct parameter order: maxX, minX, maxY, minY (which seems counterintuitive)
@@ -103,62 +103,62 @@ func (repo *DbRepository) Search(bbox *models.BBox) ([]models.Activity, error) {
 		}
 	}()
 
-	var activities []models.Activity
+	var events []models.Event
 	for rows.Next() {
-		var activity models.Activity
+		var event models.Event
 
 		if err := rows.Scan(
-			&activity.ActivityReferenceNumber,
-			&activity.USRN,
-			&activity.StreetName,
-			&activity.AreaName,
-			&activity.Town,
-			&activity.HighwayAuthority,
-			&activity.HighwayAuthoritySwaCode,
-			&activity.ActivityCoordinates,
-			&activity.ActivityLocationType,
-			&activity.ActivityLocationDescription,
-			&activity.WorkCategory,
-			&activity.WorkCategoryRef,
-			&activity.WorkStatus,
-			&activity.WorkStatusRef,
-			&activity.TrafficManagementType,
-			&activity.TrafficManagementTypeRef,
-			&activity.CurrentTrafficManagementType,
-			&activity.CurrentTrafficManagementTypeRef,
-			&activity.RoadCategory,
-			&activity.ActivityType,
-			&activity.ActivityTypeDetails,
-			&activity.ProposedStartDate,
-			&activity.ProposedEndDate,
-			&activity.ProposedStartTime,
-			&activity.ProposedEndTime,
-			&activity.ActualStartDateTime,
-			&activity.ActualEndDateTime,
-			&activity.StartDate,
-			&activity.StartTime,
-			&activity.EndDate,
-			&activity.EndTime,
-			&activity.CurrentTrafficManagementUpdateDate,
-			&activity.IsTtroRequired,
-			&activity.IsCovid19Response,
-			&activity.IsTrafficSensitive,
-			&activity.IsDeemed,
-			&activity.CollaborativeWorking,
-			&activity.Cancelled,
-			&activity.TrafficManagementRequired,
+			&event.ActivityReferenceNumber,
+			&event.USRN,
+			&event.StreetName,
+			&event.AreaName,
+			&event.Town,
+			&event.HighwayAuthority,
+			&event.HighwayAuthoritySWACode,
+			&event.ActivityCoordinates,
+			&event.ActivityLocationType,
+			&event.ActivityLocationDescription,
+			&event.WorkCategory,
+			&event.WorkCategoryRef,
+			&event.WorkStatus,
+			&event.WorkStatusRef,
+			&event.TrafficManagementType,
+			&event.TrafficManagementTypeRef,
+			&event.CurrentTrafficManagementType,
+			&event.CurrentTrafficManagementTypeRef,
+			&event.RoadCategory,
+			&event.ActivityType,
+			&event.ActivityTypeDetails,
+			&event.ProposedStartDate,
+			&event.ProposedEndDate,
+			&event.ProposedStartTime,
+			&event.ProposedEndTime,
+			&event.ActualStartDateTime,
+			&event.ActualEndDateTime,
+			&event.StartDate,
+			&event.StartTime,
+			&event.EndDate,
+			&event.EndTime,
+			&event.CurrentTrafficManagementUpdateDate,
+			&event.IsTTRORequired,
+			&event.IsCovid19Response,
+			&event.IsTrafficSensitive,
+			&event.IsDeemed,
+			&event.CollaborativeWorking,
+			&event.Cancelled,
+			&event.TrafficManagementRequired,
 		); err != nil {
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
 
-		activities = append(activities, activity)
+		events = append(events, event)
 	}
 
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("error iterating over rows: %w", err)
 	}
 
-	return activities, nil
+	return events, nil
 }
 
 func (repo *DbRepository) Close() error {
@@ -236,9 +236,9 @@ func (repo *DbRepository) BatchUpsert() (*Batch, error) {
 	}
 
 	query := fmt.Sprintf(`
-		INSERT INTO activities (%s)
+		INSERT INTO events (%s)
 		VALUES (%s)
-		ON CONFLICT(activity_reference_number) DO UPDATE SET
+		ON CONFLICT(object_reference) DO UPDATE SET
 		%s
 	`, strings.Join(cols, ", "), strings.Join(placeholders, ", "), strings.Join(updateSet, ", "))
 
@@ -259,64 +259,60 @@ func (repo *DbRepository) BatchUpsert() (*Batch, error) {
 }
 
 // inserts or updates an Activity based on activity_reference_number.
-func (batch *Batch) Upsert(activity *models.Activity) (int64, error) {
-	if activity.ActivityReferenceNumber == nil || *activity.ActivityReferenceNumber == "" {
-		return 0, fmt.Errorf("activity_reference_number is required")
-	}
-
-	bbox, err := activity.BoundingBox()
+func (batch *Batch) Upsert(event *models.Event) (int64, error) {
+	bbox, err := event.BoundingBox()
 	if err != nil {
 		return 0, fmt.Errorf("failed to calculate bounding box: %w", err)
 	}
 
 	// Extract values from struct
 	values := []any{
-		activity.ActivityReferenceNumber,
-		activity.USRN,
-		activity.StreetName,
-		activity.AreaName,
-		activity.Town,
-		activity.HighwayAuthority,
-		activity.HighwayAuthoritySwaCode,
-		activity.ActivityCoordinates,
-		activity.ActivityLocationType,
-		activity.ActivityLocationDescription,
-		activity.WorkCategory,
-		activity.WorkCategoryRef,
-		activity.WorkStatus,
-		activity.WorkStatusRef,
-		activity.TrafficManagementType,
-		activity.TrafficManagementTypeRef,
-		activity.CurrentTrafficManagementType,
-		activity.CurrentTrafficManagementTypeRef,
-		activity.RoadCategory,
-		activity.ActivityType,
-		activity.ActivityTypeDetails,
-		activity.ProposedStartDate,
-		activity.ProposedEndDate,
-		activity.ProposedStartTime,
-		activity.ProposedEndTime,
-		activity.ActualStartDateTime,
-		activity.ActualEndDateTime,
-		activity.StartDate,
-		activity.StartTime,
-		activity.EndDate,
-		activity.EndTime,
-		activity.CurrentTrafficManagementUpdateDate,
-		activity.IsTtroRequired,
-		activity.IsCovid19Response,
-		activity.IsTrafficSensitive,
-		activity.IsDeemed,
-		activity.CollaborativeWorking,
-		activity.Cancelled,
-		activity.TrafficManagementRequired,
-		activity.WorksLocationCoordinates,
-		activity.WorksLocationType,
-		activity.PermitConditions,
-		activity.CollaborationType,
-		activity.CollaborationTypeRef,
-		activity.CloseFootway,
-		activity.CloseFootwayRef,
+		event.ActivityReferenceNumber,
+		event.USRN,
+		event.StreetName,
+		event.AreaName,
+		event.Town,
+		event.HighwayAuthority,
+		event.HighwayAuthoritySWACode,
+		event.ActivityCoordinates,
+		event.ActivityLocationType,
+		event.ActivityLocationDescription,
+		event.WorkCategory,
+		event.WorkCategoryRef,
+		event.WorkStatus,
+		event.WorkStatusRef,
+		event.TrafficManagementType,
+		event.TrafficManagementTypeRef,
+		event.CurrentTrafficManagementType,
+		event.CurrentTrafficManagementTypeRef,
+		event.RoadCategory,
+		event.ActivityType,
+		event.ActivityTypeDetails,
+		event.ProposedStartDate,
+		event.ProposedEndDate,
+		event.ProposedStartTime,
+		event.ProposedEndTime,
+		event.ActualStartDateTime,
+		event.ActualEndDateTime,
+		event.StartDate,
+		event.StartTime,
+		event.EndDate,
+		event.EndTime,
+		event.CurrentTrafficManagementUpdateDate,
+		event.IsTTRORequired,
+		event.IsCovid19Response,
+		event.IsTrafficSensitive,
+		event.IsDeemed,
+		event.CollaborativeWorking,
+		event.Cancelled,
+		event.TrafficManagementRequired,
+		event.WorksLocationCoordinates,
+		event.WorksLocationType,
+		event.PermitConditions,
+		event.CollaborationType,
+		event.CollaborationTypeRef,
+		event.CloseFootway,
+		event.CloseFootwayRef,
 	}
 
 	res, err := batch.stmt.Exec(values...)
@@ -353,13 +349,13 @@ func (batch *Batch) Abort(err error) error {
 }
 
 func (batch *Batch) upsertRTree(id int64, bbox models.BBox) error {
-	_, err := batch.tx.Exec(`DELETE FROM activities_rtree WHERE id = ?`, id)
+	_, err := batch.tx.Exec(`DELETE FROM events_rtree WHERE id = ?`, id)
 	if err != nil {
 		return err
 	}
 
 	_, err = batch.tx.Exec(
-		`INSERT INTO activities_rtree (id, minx, maxx, miny, maxy) VALUES (?, ?, ?, ?, ?)`,
+		`INSERT INTO events_rtree (id, minx, maxx, miny, maxy) VALUES (?, ?, ?, ?, ?)`,
 		id, bbox.MinX, bbox.MaxX, bbox.MinY, bbox.MaxY,
 	)
 	return err
