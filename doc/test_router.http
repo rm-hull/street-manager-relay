@@ -13,3 +13,8 @@ Accept-Language: en-us,en;q=0.5
 Accept-Encoding: gzip,deflate
 Connection: keep-alive
 Origin: https://foo.example
+
+
+### Health check for the API
+GET http://localhost:8080/healthz
+Accept: application/json

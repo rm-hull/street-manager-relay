@@ -9,6 +9,7 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rm-hull/street-manager-relay/models"
+	"github.com/tavsec/gin-healthcheck/checks"
 )
 
 //go:embed create_db.sql
@@ -160,6 +161,12 @@ func (repo *DbRepository) Close() error {
 		return repo.db.Close()
 	}
 	return nil
+}
+
+func (repo *DbRepository) HealthCheck() checks.Check {
+	return checks.SqlCheck{
+		Sql: repo.db,
+	}
 }
 
 // inserts or updates an Activity based on activity_reference_number.

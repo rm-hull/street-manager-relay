@@ -53,23 +53,9 @@ func main() {
 }
 
 func server(dataPath string, port int) {
-	r := gin.New()
-	r.Use(
-		gin.Recovery(),
-		gin.LoggerWithWriter(gin.DefaultWriter, "/healthz"),
-		compress.Compress(),
-		cors.Default(),
-	)
 
-	err := healthcheck.New(r, hc_config.DefaultConfig(), []checks.Check{})
-	if err != nil {
-		log.Fatalf("failed to initialize healthcheck: %v", err)
-	}
-
-	cache := memoize.NewMemoizer(24*time.Hour, 1*time.Hour)
-	certManager := internal.NewCertManager(cache)
-
-	repo, err := internal.NewDbRepository(filepath.Join(dataPath, "street-manager.db"))
+	dbPath := filepath.Join(dataPath, "street-manager.db")
+	repo, err := internal.NewDbRepository(dbPath)
 	if err != nil {
 		log.Fatalf("Failed to initialize db repository: %v", err)
 	}
@@ -78,6 +64,24 @@ func server(dataPath string, port int) {
 			log.Printf("Error closing database: %v", err)
 		}
 	}()
+
+	r := gin.New()
+	r.Use(
+		gin.Recovery(),
+		gin.LoggerWithWriter(gin.DefaultWriter, "/healthz"),
+		compress.Compress(),
+		cors.Default(),
+	)
+
+	err = healthcheck.New(r, hc_config.DefaultConfig(), []checks.Check{
+		repo.HealthCheck(),
+	})
+	if err != nil {
+		log.Fatalf("failed to initialize healthcheck: %v", err)
+	}
+
+	cache := memoize.NewMemoizer(24*time.Hour, 1*time.Hour)
+	certManager := internal.NewCertManager(cache)
 
 	r.POST("/v1/street-manager-relay/sns", handleSNSMessage(repo, certManager))
 	r.GET("/v1/street-manager-relay/search", handleSearch(repo))
