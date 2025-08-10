@@ -76,25 +76,7 @@ SELECT
 FROM events AS e
 INNER JOIN events_rtree r ON e.id = r.id
 WHERE r.minx <= ? AND r.maxx >= ? AND r.miny <= ? AND r.maxy >= ?
-  AND (
-      -- Get the first available start and end datetime
-      (
-        COALESCE(e.actual_start_date_time,
-                 e.start_date,
-                 e.proposed_start_date) >= CURRENT_DATE
-      )
-      OR
-      (
-        COALESCE(e.actual_start_date_time,
-                 e.start_date,
-                 e.proposed_start_date) <= CURRENT_DATE
-        AND (
-          COALESCE(e.actual_end_date_time,
-                   e.end_date,
-                   e.proposed_end_date) IS NULL
-          OR COALESCE(e.actual_end_date_time,
-                      e.end_date,
-                      e.proposed_end_date) >= CURRENT_DATE
-        )
-      )
-  );
+AND (
+    COALESCE(e.actual_end_date_time, e.end_date, e.end_time, e.proposed_end_date, e.proposed_end_time) IS NULL OR
+    COALESCE(e.actual_end_date_time, e.end_date, e.end_time, e.proposed_end_date, e.proposed_end_time) >= CURRENT_DATE
+);

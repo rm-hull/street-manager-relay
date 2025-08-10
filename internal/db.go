@@ -182,6 +182,12 @@ func (repo *DbRepository) Search(bbox *models.BBox) ([]models.Event, error) {
 }
 
 func (repo *DbRepository) Close() error {
+	if repo.searchStmt != nil {
+		if err := repo.searchStmt.Close(); err != nil {
+			return fmt.Errorf("failed to close db statement: %w", err)
+		}
+	}
+
 	if repo.db != nil {
 		return repo.db.Close()
 	}
