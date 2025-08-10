@@ -89,7 +89,10 @@ func handleSearch(repo *internal.DbRepository) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"events": events})
+		c.JSON(http.StatusOK, gin.H{
+			"results":     events,
+			"attribution": internal.ATTRIBUTION,
+		})
 	}
 }
 
