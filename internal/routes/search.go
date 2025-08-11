@@ -40,24 +40,17 @@ func HandleSearch(repo *internal.DbRepository) gin.HandlerFunc {
 
 func bindFacets(c *gin.Context) (*models.Facets, error) {
 	facets := &models.Facets{}
-
-	// Bind string array parameters
-	// Supports multiple formats:
-	// 1. Multiple params: ?traffic_management_type_ref=Excavation&traffic_management_type_ref=Resurfacing
-	// 2. Comma-separated: ?traffic_management_type_ref=Excavation,Resurfacing
-	// 3. Empty means no filter
-
-	facetBinders := map[string]func([]string){
-		"permit_status":             func(v []string) { facets.PermitStatus = v },
+	binders := map[string]func([]string){
+		"permit_status":               func(v []string) { facets.PermitStatus = v },
 		"traffic_management_type_ref": func(v []string) { facets.TrafficManagementTypeRef = v },
-		"work_status_ref":           func(v []string) { facets.WorkStatusRef = v },
-		"work_category_ref":         func(v []string) { facets.WorkCategoryRef = v },
-		"road_category":             func(v []string) { facets.RoadCategory = v },
-		"highway_authority":         func(v []string) { facets.HighwayAuthority = v },
-		"promoter_organisation":     func(v []string) { facets.PromoterOrganisation = v },
+		"work_status_ref":             func(v []string) { facets.WorkStatusRef = v },
+		"work_category_ref":           func(v []string) { facets.WorkCategoryRef = v },
+		"road_category":               func(v []string) { facets.RoadCategory = v },
+		"highway_authority":           func(v []string) { facets.HighwayAuthority = v },
+		"promoter_organisation":       func(v []string) { facets.PromoterOrganisation = v },
 	}
 
-	for param, setter := range facetBinders {
+	for param, setter := range binders {
 		if values := c.QueryArray(param); len(values) > 0 {
 			setter(expandCommaSeparated(values))
 		}
@@ -71,9 +64,8 @@ func bindFacets(c *gin.Context) (*models.Facets, error) {
 func expandCommaSeparated(values []string) []string {
 	var result []string
 	for _, value := range values {
-		// Split by comma and trim whitespace
-		parts := strings.Split(value, ",")
-		for _, part := range parts {
+		parts := strings.SplitSeq(value, ",")
+		for part := range parts {
 			if trimmed := strings.TrimSpace(part); trimmed != "" {
 				result = append(result, trimmed)
 			}
