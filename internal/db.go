@@ -442,6 +442,13 @@ func (repo *DbRepository) RegenerateIndex(progress *func()) (int, int, error) {
 		return 0, 0, fmt.Errorf("failed to begin transaction: %w", err)
 	}
 
+	defer func() {
+		// Rollback will have no effect if commit was already called
+		if err := tx.Rollback(); err != nil {
+			log.Printf("Rrollback: %v", err)
+		}
+	}()
+
 	updateStmt, err := tx.Prepare(`
 		UPDATE events_rtree
 		SET minx=?, maxx=?, miny=?, maxy=?
@@ -460,7 +467,7 @@ func (repo *DbRepository) RegenerateIndex(progress *func()) (int, int, error) {
 			r.miny,
 			r.maxy
 		FROM events e
-		LEFT JOIN events_rtree r ON e.id = r.id
+		INNER JOIN events_rtree r ON e.id = r.id
 	`)
 	if err != nil {
 		return 0, 0, fmt.Errorf("failed to execute query: %w", err)
