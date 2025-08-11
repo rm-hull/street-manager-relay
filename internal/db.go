@@ -435,7 +435,7 @@ func (batch *Batch) upsertRTree(id int64, bbox models.BBox) error {
 	return err
 }
 
-func (repo *DbRepository) RegenerateIndex(progress *func()) (int, int, error) {
+func (repo *DbRepository) RegenerateIndex() (int, int, error) {
 
 	tx, err := repo.db.Begin()
 	if err != nil {
@@ -513,9 +513,6 @@ func (repo *DbRepository) RegenerateIndex(progress *func()) (int, int, error) {
 			}
 		}
 
-		if progress != nil {
-			(*progress)()
-		}
 		total++
 	}
 

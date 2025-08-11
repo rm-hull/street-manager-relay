@@ -18,7 +18,7 @@ func RegenerateIndex(dbPath string) error {
 		}
 	}()
 
-	affected, total, err := repo.RegenerateIndex(nil)
+	affected, total, err := repo.RegenerateIndex()
 	if err != nil {
 		return fmt.Errorf("error regenerating index: %w", err)
 	}
