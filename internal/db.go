@@ -38,37 +38,36 @@ func NewDbRepository(dbPath string) (*DbRepository, error) {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
 
+	err = create(db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create database: %w", err)
+	}
+
 	searchStmt, err := db.Prepare(searchSQL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare search SQL: %w", err)
 	}
 
-	repo := &DbRepository{db: db, searchStmt: searchStmt}
-	err = repo.create()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create database: %w", err)
-	}
-
 	log.Printf("Database initialized successfully: %s", dbPath)
-	return repo, nil
+	return &DbRepository{db: db, searchStmt: searchStmt}, nil
 }
 
-func (repo *DbRepository) create() error {
-	exists, err := repo.tablesExists("events")
+func create(db *sql.DB) error {
+	exists, err := tablesExists(db, "events")
 	if err != nil {
 		return fmt.Errorf("error checking if table exists: %w", err)
 	}
 	if exists {
 		return nil
 	}
-	_, err = repo.db.Exec(createSQL)
+	_, err = db.Exec(createSQL)
 	return err
 }
 
-func (repo *DbRepository) tablesExists(table string) (bool, error) {
+func tablesExists(db *sql.DB, table string) (bool, error) {
 	var exists bool
 	query := "SELECT EXISTS (SELECT 1 FROM sqlite_master WHERE type='table' AND name=?)"
-	err := repo.db.QueryRow(query, table).Scan(&exists)
+	err := db.QueryRow(query, table).Scan(&exists)
 	if err != nil && err != sql.ErrNoRows {
 		return false, err
 	}
@@ -292,6 +291,7 @@ func (repo *DbRepository) BatchUpsert() (*Batch, error) {
 		VALUES (%s)
 		ON CONFLICT(object_reference) DO UPDATE SET
 		%s
+		RETURNING id;
 	`, strings.Join(cols, ", "), strings.Join(placeholders, ", "), strings.Join(updateSet, ", "))
 
 	tx, err := repo.db.Begin()
@@ -393,14 +393,10 @@ func (batch *Batch) Upsert(event *models.Event) (int64, error) {
 		event.CloseFootwayRef,
 	}
 
-	res, err := batch.stmt.Exec(values...)
+	var id int64
+	err = batch.stmt.QueryRow(values...).Scan(&id)
 	if err != nil {
 		return 0, fmt.Errorf("failed to execute upsert query: %w", err)
-	}
-
-	id, err := res.LastInsertId()
-	if err != nil {
-		return 0, fmt.Errorf("failed to get last insert id: %w", err)
 	}
 
 	err = batch.upsertRTree(id, *bbox)
