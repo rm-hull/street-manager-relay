@@ -47,32 +47,20 @@ func bindFacets(c *gin.Context) (*models.Facets, error) {
 	// 2. Comma-separated: ?traffic_management_type_ref=Excavation,Resurfacing
 	// 3. Empty means no filter
 
-	if values := c.QueryArray("permit_status"); len(values) > 0 {
-		facets.PermitStatus = expandCommaSeparated(values)
+	facetBinders := map[string]func([]string){
+		"permit_status":             func(v []string) { facets.PermitStatus = v },
+		"traffic_management_type_ref": func(v []string) { facets.TrafficManagementTypeRef = v },
+		"work_status_ref":           func(v []string) { facets.WorkStatusRef = v },
+		"work_category_ref":         func(v []string) { facets.WorkCategoryRef = v },
+		"road_category":             func(v []string) { facets.RoadCategory = v },
+		"highway_authority":         func(v []string) { facets.HighwayAuthority = v },
+		"promoter_organisation":     func(v []string) { facets.PromoterOrganisation = v },
 	}
 
-	if values := c.QueryArray("traffic_management_type_ref"); len(values) > 0 {
-		facets.TrafficManagementTypeRef = expandCommaSeparated(values)
-	}
-
-	if values := c.QueryArray("work_status_ref"); len(values) > 0 {
-		facets.WorkStatusRef = expandCommaSeparated(values)
-	}
-
-	if values := c.QueryArray("work_category_ref"); len(values) > 0 {
-		facets.WorkCategoryRef = expandCommaSeparated(values)
-	}
-
-	if values := c.QueryArray("road_category"); len(values) > 0 {
-		facets.RoadCategory = expandCommaSeparated(values)
-	}
-
-	if values := c.QueryArray("highway_authority"); len(values) > 0 {
-		facets.HighwayAuthority = expandCommaSeparated(values)
-	}
-
-	if values := c.QueryArray("promoter_organisation"); len(values) > 0 {
-		facets.PromoterOrganisation = expandCommaSeparated(values)
+	for param, setter := range facetBinders {
+		if values := c.QueryArray(param); len(values) > 0 {
+			setter(expandCommaSeparated(values))
+		}
 	}
 
 	return facets, nil
