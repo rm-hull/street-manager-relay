@@ -445,7 +445,7 @@ func (repo *DbRepository) RegenerateIndex(progress *func()) (int, int, error) {
 	defer func() {
 		// Rollback will have no effect if commit was already called
 		if err := tx.Rollback(); err != nil {
-			log.Printf("Rrollback: %v", err)
+			log.Printf("Rollback: %v", err)
 		}
 	}()
 
@@ -492,7 +492,7 @@ func (repo *DbRepository) RegenerateIndex(progress *func()) (int, int, error) {
 
 		regen, err := models.BoundingBoxFromWKT(coords)
 		if err != nil {
-			return 0, 0, fmt.Errorf("failed to create boundng box: %w", err)
+			return 0, 0, fmt.Errorf("failed to create bounding box: %w", err)
 		}
 
 		if !regen.Equals(bbox, 1) {
