@@ -19,7 +19,21 @@
             "request": "launch",
             "mode": "auto",
             "program": "main.go",
-            "args": ["bulk-loader", "../street-manager-archive/permits", "--max-files", "10"],
+            "args": [
+                "bulk-loader",
+                "../street-manager-archive/permits",
+                "--max-files",
+                "10"
+            ],
+            "buildFlags": "-tags=jsoniter,sqlite_rtree"
+        },
+        {
+            "name": "Launch regenerate index",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "main.go",
+            "args": ["regen", "--db=./data/street-manager.db"],
             "buildFlags": "-tags=jsoniter,sqlite_rtree"
         }
     ]

@@ -29,7 +29,7 @@ type Batch struct {
 }
 
 func NewDbRepository(dbPath string) (*DbRepository, error) {
-	db, err := sql.Open("sqlite3", dbPath)
+	db, err := sql.Open("sqlite3", dbPath+"?_journal_mode=WAL&_busy_timeout=5000")
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
@@ -433,4 +433,89 @@ func (batch *Batch) upsertRTree(id int64, bbox models.BBox) error {
 		id, bbox.MinX, bbox.MaxX, bbox.MinY, bbox.MaxY,
 	)
 	return err
+}
+
+func (repo *DbRepository) RegenerateIndex(progress *func()) (int, int, error) {
+
+	tx, err := repo.db.Begin()
+	if err != nil {
+		return 0, 0, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+
+	updateStmt, err := tx.Prepare(`
+		UPDATE events_rtree
+		SET minx=?, maxx=?, miny=?, maxy=?
+		WHERE ID=?
+	`)
+	if err != nil {
+		return 0, 0, fmt.Errorf("failed to prepare update statement: %w", err)
+	}
+
+	rows, err := repo.db.Query(`
+		SELECT
+			e.id,
+			COALESCE(e.works_location_coordinates, e.activity_coordinates, e.section_58_coordinates) as coords,
+			r.minx,
+			r.maxx,
+			r.miny,
+			r.maxy
+		FROM events e
+		LEFT JOIN events_rtree r ON e.id = r.id
+	`)
+	if err != nil {
+		return 0, 0, fmt.Errorf("failed to execute query: %w", err)
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Error closing rows: %v", err)
+		}
+	}()
+
+	affected := 0
+	total := 0
+
+	var id int64
+	var coords string
+	var bbox models.BBox
+
+	for rows.Next() {
+		if err := rows.Scan(&id, &coords, &bbox.MinX, &bbox.MaxX, &bbox.MinY, &bbox.MaxY); err != nil {
+			return 0, 0, fmt.Errorf("failed to scan row: %w", err)
+		}
+
+		regen, err := models.BoundingBoxFromWKT(coords)
+		if err != nil {
+			return 0, 0, fmt.Errorf("failed to create boundng box: %w", err)
+		}
+
+		if !regen.Equals(bbox, 1) {
+			log.Printf("Record %d needs bbox regen: %v doesnt match stored: %v", id, regen, bbox)
+			affected++
+
+			res, err := updateStmt.Exec(regen.MinX, regen.MaxX, regen.MinY, regen.MaxY, id)
+			if err != nil {
+				return 0, 0, fmt.Errorf("failed to update rtree: %w", err)
+			}
+
+			updated, err := res.RowsAffected()
+			if err != nil {
+				return 0, 0, fmt.Errorf("failed to get rows affected: %w", err)
+			}
+			if updated != 1 {
+				return 0, 0, fmt.Errorf("unexpected rows affected %d for id=%d", updated, id)
+			}
+		}
+
+		if progress != nil {
+			(*progress)()
+		}
+		total++
+	}
+
+	if err := tx.Commit(); err != nil {
+		return 0, 0, fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return affected, total, nil
+
 }

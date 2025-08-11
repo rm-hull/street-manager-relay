@@ -55,8 +55,19 @@ func main() {
 
 	bulkLoaderCmd.Flags().IntVar(&maxFiles, "max-files", math.MaxInt, "Maximum number of files to process")
 
+	regenCmd := &cobra.Command{
+		Use:   "regen [--db <path>]",
+		Short: "Regenerate Indexes",
+		Run: func(_ *cobra.Command, _ []string) {
+			if err := cmd.RegenerateIndex(dbPath); err != nil {
+				log.Fatalf("Regenerate index failed: %v", err)
+			}
+		},
+	}
+
 	rootCmd.AddCommand(apiServerCmd)
 	rootCmd.AddCommand(bulkLoaderCmd)
+	rootCmd.AddCommand(regenCmd)
 	if err = rootCmd.Execute(); err != nil {
 		panic(err)
 	}

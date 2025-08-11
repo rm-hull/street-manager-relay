@@ -1,13 +1,8 @@
 package models
 
 import (
-	"math"
 	"testing"
 )
-
-func almostEqual(a, b, tol float64) bool {
-	return math.Abs(a-b) <= tol
-}
 
 func TestBoundingBoxFromWKT(t *testing.T) {
 	tests := []struct {
@@ -58,10 +53,7 @@ func TestBoundingBoxFromWKT(t *testing.T) {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
-			if !almostEqual(bbox.MinX, tt.expected.MinX, tol) ||
-				!almostEqual(bbox.MaxX, tt.expected.MaxX, tol) ||
-				!almostEqual(bbox.MinY, tt.expected.MinY, tol) ||
-				!almostEqual(bbox.MaxY, tt.expected.MaxY, tol) {
+			if !bbox.Equals(tt.expected, tol) {
 				t.Errorf("got %+v, want %+v", bbox, tt.expected)
 			}
 		})

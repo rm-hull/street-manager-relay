@@ -16,6 +16,17 @@ type BBox struct {
 	MaxY float64
 }
 
+func almostEqual(a, b, tolerance float64) bool {
+	return math.Abs(a-b) <= tolerance
+}
+
+func (bbox BBox) Equals(other BBox, tolerance float64) bool {
+	return almostEqual(bbox.MinX, other.MinX, tolerance) &&
+		almostEqual(bbox.MaxX, other.MaxX, tolerance) &&
+		almostEqual(bbox.MinY, other.MinY, tolerance) &&
+		almostEqual(bbox.MaxY, other.MaxY, tolerance)
+}
+
 func BoundingBoxFromWKT(wktStr string) (*BBox, error) {
 	g, err := wkt.Unmarshal(wktStr)
 	if err != nil {
