@@ -187,26 +187,20 @@ func facetsToParams(bbox *models.BBox, facets *models.Facets) []any {
 	}
 
 	// Add string facet parameters (each facet needs 3 parameters for the OR condition)
-	permitStatusJSON := toJSONOrNil(getFacetSlice(facets, func(f *models.Facets) []string { return f.PermitStatus }))
-	params = append(params, permitStatusJSON, permitStatusJSON, permitStatusJSON)
+	facetGetters := []func(f *models.Facets) []string{
+		func(f *models.Facets) []string { return f.PermitStatus },
+		func(f *models.Facets) []string { return f.TrafficManagementTypeRef },
+		func(f *models.Facets) []string { return f.WorkStatusRef },
+		func(f *models.Facets) []string { return f.WorkCategoryRef },
+		func(f *models.Facets) []string { return f.RoadCategory },
+		func(f *models.Facets) []string { return f.HighwayAuthority },
+		func(f *models.Facets) []string { return f.PromoterOrganisation },
+	}
 
-	trafficMgmtJSON := toJSONOrNil(getFacetSlice(facets, func(f *models.Facets) []string { return f.TrafficManagementTypeRef }))
-	params = append(params, trafficMgmtJSON, trafficMgmtJSON, trafficMgmtJSON)
-
-	workStatusJSON := toJSONOrNil(getFacetSlice(facets, func(f *models.Facets) []string { return f.WorkStatusRef }))
-	params = append(params, workStatusJSON, workStatusJSON, workStatusJSON)
-
-	workCategoryJSON := toJSONOrNil(getFacetSlice(facets, func(f *models.Facets) []string { return f.WorkCategoryRef }))
-	params = append(params, workCategoryJSON, workCategoryJSON, workCategoryJSON)
-
-	roadCategoryJSON := toJSONOrNil(getFacetSlice(facets, func(f *models.Facets) []string { return f.RoadCategory }))
-	params = append(params, roadCategoryJSON, roadCategoryJSON, roadCategoryJSON)
-
-	highwayAuthorityJSON := toJSONOrNil(getFacetSlice(facets, func(f *models.Facets) []string { return f.HighwayAuthority }))
-	params = append(params, highwayAuthorityJSON, highwayAuthorityJSON, highwayAuthorityJSON)
-
-	promoterOrgJSON := toJSONOrNil(getFacetSlice(facets, func(f *models.Facets) []string { return f.PromoterOrganisation }))
-	params = append(params, promoterOrgJSON, promoterOrgJSON, promoterOrgJSON)
+	for _, getter := range facetGetters {
+		jsonVal := toJSONOrNil(getFacetSlice(facets, getter))
+		params = append(params, jsonVal, jsonVal, jsonVal)
+	}
 
 	return params
 }
