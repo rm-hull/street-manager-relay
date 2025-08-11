@@ -50,7 +50,7 @@ This endpoint is used to search for events in the database.
 
 **Parameters:**
 
--   `bbox` (required): A comma-separated string of four coordinates representing the bounding box for the search (e.g., `min_longitude,min_latitude,max_longitude,max_latitude`).
+-   `bbox` (required): A comma-separated string of four coordinates representing the bounding box for the search (e.g., `min_easting,max_easting,min_northing,max_northing`).
 -   **Facets** (optional): You can filter the search results by providing one or more of the following facet parameters. You can provide multiple values for each facet by either repeating the parameter (e.g., `work_status_ref=planned&work_status_ref=in_progress`) or by providing a comma-separated list of values (e.g., `work_status_ref=planned,in_progress`).
 
     -   `permit_status`
@@ -64,7 +64,7 @@ This endpoint is used to search for events in the database.
 **Example `curl` request:**
 
 ```bash
-curl -X GET "http://localhost:8080/v1/street-manager-relay/search?bbox=-0.1415,51.5013,-0.1133,51.5154&work_status_ref=in_progress,planned"
+curl -X GET "http://localhost:8080/v1/street-manager-relay/search?bbox=418995,435778,429089,441777&work_status_ref=in_progress,planned"
 ```
 
 ### Command-Line Interface
