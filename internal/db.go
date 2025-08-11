@@ -74,13 +74,13 @@ func tablesExists(db *sql.DB, table string) (bool, error) {
 	return exists, nil
 }
 
-func (repo *DbRepository) Search(bbox *models.BBox) ([]models.Event, error) {
+func (repo *DbRepository) Search(bbox *models.BBox, facets *models.Facets) ([]models.Event, error) {
 	if bbox == nil {
 		return nil, fmt.Errorf("bounding box is required")
 	}
 
-	// Correct parameter order: maxX, minX, maxY, minY (which seems counterintuitive)
-	rows, err := repo.searchStmt.Query(bbox.MaxX, bbox.MinX, bbox.MaxY, bbox.MinY)
+	params := facetsToParams(bbox, facets)
+	rows, err := repo.searchStmt.Query(params...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute search query: %w", err)
 	}
@@ -90,7 +90,7 @@ func (repo *DbRepository) Search(bbox *models.BBox) ([]models.Event, error) {
 		}
 	}()
 
-	var events []models.Event
+	events := make([]models.Event, 0, 50)
 	for rows.Next() {
 		var event models.Event
 		if err := rows.Scan(
@@ -178,6 +178,48 @@ func (repo *DbRepository) Search(bbox *models.BBox) ([]models.Event, error) {
 	}
 
 	return events, nil
+}
+
+func facetsToParams(bbox *models.BBox, facets *models.Facets) []any {
+	params := []any{
+		// Correct parameter order: maxX, minX, maxY, minY (which seems counterintuitive)
+		bbox.MaxX, bbox.MinX, bbox.MaxY, bbox.MinY,
+	}
+
+	// Add string facet parameters (each facet needs 3 parameters for the OR condition)
+	facetGetters := []func(f *models.Facets) []string{
+		func(f *models.Facets) []string { return f.PermitStatus },
+		func(f *models.Facets) []string { return f.TrafficManagementTypeRef },
+		func(f *models.Facets) []string { return f.WorkStatusRef },
+		func(f *models.Facets) []string { return f.WorkCategoryRef },
+		func(f *models.Facets) []string { return f.RoadCategory },
+		func(f *models.Facets) []string { return f.HighwayAuthority },
+		func(f *models.Facets) []string { return f.PromoterOrganisation },
+	}
+
+	for _, getter := range facetGetters {
+		jsonVal := toJSONOrNil(getFacetSlice(facets, getter))
+		params = append(params, jsonVal, jsonVal, jsonVal)
+	}
+
+	return params
+}
+
+// Helper function to convert string slice to JSON or nil
+func toJSONOrNil(slice []string) any {
+	if len(slice) == 0 {
+		return nil
+	}
+	jsonBytes, _ := json.Marshal(slice)
+	return string(jsonBytes)
+}
+
+// Helper functions to safely extract facet values
+func getFacetSlice(facets *models.Facets, getter func(*models.Facets) []string) []string {
+	if facets == nil {
+		return nil
+	}
+	return getter(facets)
 }
 
 func (repo *DbRepository) Close() error {

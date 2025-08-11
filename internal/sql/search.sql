@@ -79,4 +79,12 @@ WHERE r.minx <= ? AND r.maxx >= ? AND r.miny <= ? AND r.maxy >= ?
 AND (
     COALESCE(e.actual_end_date_time, e.end_date, e.end_time, e.proposed_end_date, e.proposed_end_time) IS NULL OR
     COALESCE(e.actual_end_date_time, e.end_date, e.end_time, e.proposed_end_date, e.proposed_end_time) >= CURRENT_DATE
-);
+)
+-- Facet filters: empty JSON array means no filter
+AND (? IS NULL OR json_array_length(?) = 0 OR e.permit_status IN (SELECT value FROM json_each(?)))
+AND (? IS NULL OR json_array_length(?) = 0 OR e.traffic_management_type_ref IN (SELECT value FROM json_each(?)))
+AND (? IS NULL OR json_array_length(?) = 0 OR e.work_status_ref IN (SELECT value FROM json_each(?)))
+AND (? IS NULL OR json_array_length(?) = 0 OR e.work_category_ref IN (SELECT value FROM json_each(?)))
+AND (? IS NULL OR json_array_length(?) = 0 OR e.road_category IN (SELECT value FROM json_each(?)))
+AND (? IS NULL OR json_array_length(?) = 0 OR e.highway_authority IN (SELECT value FROM json_each(?)))
+AND (? IS NULL OR json_array_length(?) = 0 OR e.promoter_organisation IN (SELECT value FROM json_each(?)))

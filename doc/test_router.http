@@ -23,7 +23,7 @@ x-amz-sns-message-type: 2
 
 
 ### Search for events within a bounding box
-GET http://localhost:8080/v1/street-manager-relay/search?bbox=418141,421232,441633,445228
+GET http://localhost:8080/v1/street-manager-relay/search?bbox=418995,435778,429089,441777&work_status_ref=planned&work_category_ref=paa
 Accept: application/json;q=0.9,*/*;q=0.8
 Accept-Language: en-us,en;q=0.5
 Accept-Encoding: gzip,deflate
