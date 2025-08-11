@@ -23,7 +23,11 @@ func RegenerateIndex(dbPath string) error {
 		return fmt.Errorf("error regenerating index: %w", err)
 	}
 
-	log.Printf("Affected records: %d/%d (%.1f %%)", affected, total, float64(affected)/float64(total)*100.0)
+	if total > 0 {
+		log.Printf("Affected records: %d/%d (%.1f %%)", affected, total, float64(affected)/float64(total)*100.0)
+	} else {
+		log.Printf("No records found to process.")
+	}
 
 	return nil
 }
