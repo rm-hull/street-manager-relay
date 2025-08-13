@@ -2,7 +2,7 @@
 BINARY_NAME = street-manager-relay
 PACKAGE_NAME = generated
 GENERATED_DIR = generated
-GO_FILES = $(shell find . -path ./data -prune -o -name '*.go' -print)
+GO_FILES = $(shell find . -path ./data -prune -o -path ./$(GENERATED_DIR) -prune -o -name '*.go' -print)
 
 # Schema definitions: URL|output_filename|go_filename
 SCHEMAS = \
