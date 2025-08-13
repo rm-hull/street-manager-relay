@@ -72,6 +72,9 @@ jobs:
 
       - name: Lint
         uses: golangci/golangci-lint-action@v8
+        with:
+          version: latest
+          install-mode: goinstall
 
   docker-publish:
     concurrency:
