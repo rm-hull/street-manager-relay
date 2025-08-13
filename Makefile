@@ -2,12 +2,11 @@
 BINARY_NAME = street-manager-relay
 PACKAGE_NAME = generated
 GENERATED_DIR = generated
+GO_FILES = $(shell find . -path ./data -prune -o -name '*.go' -print)
 
 # Schema definitions: URL|output_filename|go_filename
 SCHEMAS = \
 	https://department-for-transport-streetmanager.github.io/street-manager-docs/api-documentation/json/event-notifier-message.json|event-notifier-message.json|event_notifier_message.go
-
-# 	https://department-for-transport-streetmanager.github.io/street-manager-docs/api-documentation/json/api-notification-event-notifier-message.json|api-notification-event.json|api-notification_event.go \
 
 # Extract components from schema definitions
 JSON_FILES = $(foreach schema,$(SCHEMAS),$(GENERATED_DIR)/$(word 2,$(subst |, ,$(schema))))
@@ -24,10 +23,6 @@ $(GENERATED_DIR):
 download: $(JSON_FILES)
 
 # Download individual JSON files
-$(GENERATED_DIR)/api-notification-event.json: | $(GENERATED_DIR)
-	@echo "Downloading api-notification-event.json..."
-	curl -L -o $@ "https://department-for-transport-streetmanager.github.io/street-manager-docs/api-documentation/json/api-notification-event-notifier-message.json"
-
 $(GENERATED_DIR)/event-notifier-message.json: | $(GENERATED_DIR)
 	@echo "Downloading event-notifier-message.json..."
 	curl -L -o $@ "https://department-for-transport-streetmanager.github.io/street-manager-docs/api-documentation/json/event-notifier-message.json"
@@ -36,10 +31,6 @@ $(GENERATED_DIR)/event-notifier-message.json: | $(GENERATED_DIR)
 generate: $(GO_BINDINGS)
 
 # Generate individual Go bindings
-$(GENERATED_DIR)/api-notification_event.go: $(GENERATED_DIR)/api-notification-event.json
-	@echo "Generating Go bindings for api-notification_event.go..."
-	npx quicktype --src-lang schema $< --out $@ --lang go --package $(PACKAGE_NAME)
-
 $(GENERATED_DIR)/event_notifier_message.go: $(GENERATED_DIR)/event-notifier-message.json
 	@echo "Generating Go bindings for event_notifier_message.go..."
 	npx quicktype --src-lang schema $< --out $@ --lang go --package $(PACKAGE_NAME)
@@ -47,7 +38,7 @@ $(GENERATED_DIR)/event_notifier_message.go: $(GENERATED_DIR)/event-notifier-mess
 # Build the Go binary
 build: $(BINARY_NAME)
 
-$(BINARY_NAME): $(GO_BINDINGS)
+$(BINARY_NAME): $(GO_BINDINGS) $(GO_FILES)
 	@echo "Building Go binary..."
 	go build -tags="jsoniter,sqlite_rtree" -ldflags="-w -s" -o $(BINARY_NAME) .
 
