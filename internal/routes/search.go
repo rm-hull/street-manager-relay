@@ -1,8 +1,10 @@
 package routes
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -24,7 +26,13 @@ func HandleSearch(repo *internal.DbRepository) gin.HandlerFunc {
 			return
 		}
 
-		events, err := repo.Search(bbox, facets)
+		temporalFilters, err := bindTemporalFilters(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Malformed temporal filters"})
+			return
+		}
+
+		events, err := repo.Search(bbox, facets, temporalFilters)
 		if err != nil {
 			log.Printf("Error searching events: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to search events"})
@@ -72,4 +80,29 @@ func expandCommaSeparated(values []string) []string {
 		}
 	}
 	return result
+}
+
+func bindTemporalFilters(c *gin.Context) (*models.TemporalFilters, error) {
+	filters := models.TemporalFilters{
+		MaxDaysAhead:  7,
+		MaxDaysBehind: 0,
+	}
+
+	if value := c.Query("max_days_ahead"); value != "" {
+		num, err := strconv.Atoi(value)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert max_days_ahead=%s: %w", value, err)
+		}
+		filters.MaxDaysAhead = num
+	}
+
+	if value := c.Query("max_days_behind"); value != "" {
+		num, err := strconv.Atoi(value)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert max_days_behind=%s: %w", value, err)
+		}
+		filters.MaxDaysBehind = num
+	}
+
+	return &filters, nil
 }

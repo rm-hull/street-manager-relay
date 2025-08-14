@@ -77,8 +77,11 @@ FROM events AS e
 INNER JOIN events_rtree r ON e.id = r.id
 WHERE r.minx <= ? AND r.maxx >= ? AND r.miny <= ? AND r.maxy >= ?
 AND (
+    COALESCE(e.actual_start_date_time, e.start_date, e.start_time, e.proposed_start_date, e.proposed_start_time) <= DATE('now', ?)
+)
+AND (
     COALESCE(e.actual_end_date_time, e.end_date, e.end_time, e.proposed_end_date, e.proposed_end_time) IS NULL OR
-    COALESCE(e.actual_end_date_time, e.end_date, e.end_time, e.proposed_end_date, e.proposed_end_time) >= CURRENT_DATE
+    COALESCE(e.actual_end_date_time, e.end_date, e.end_time, e.proposed_end_date, e.proposed_end_time) >= DATE('now', ?)
 )
 -- Facet filters: empty JSON array means no filter
 AND (? IS NULL OR json_array_length(?) = 0 OR e.permit_status IN (SELECT value FROM json_each(?)))
