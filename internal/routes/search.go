@@ -1,8 +1,10 @@
 package routes
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -24,7 +26,13 @@ func HandleSearch(repo *internal.DbRepository) gin.HandlerFunc {
 			return
 		}
 
-		events, err := repo.Search(bbox, facets)
+		temporalFilters, err := bindTemporalFilters(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		events, err := repo.Search(bbox, facets, temporalFilters)
 		if err != nil {
 			log.Printf("Error searching events: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to search events"})
@@ -72,4 +80,31 @@ func expandCommaSeparated(values []string) []string {
 		}
 	}
 	return result
+}
+
+func bindTemporalFilters(c *gin.Context) (*models.TemporalFilters, error) {
+	filters := models.TemporalFilters{
+		MaxDaysAhead:  7,
+		MaxDaysBehind: 0,
+	}
+
+	params := map[string]*int{
+		"max_days_ahead":  &filters.MaxDaysAhead,
+		"max_days_behind": &filters.MaxDaysBehind,
+	}
+
+	for key, target := range params {
+		if value := c.Query(key); value != "" {
+			num, err := strconv.Atoi(value)
+			if err != nil {
+				return nil, fmt.Errorf("failed to convert %s: %w", key, err)
+			}
+			if num < 0 {
+				return nil, fmt.Errorf("%s must be non-negative, but got %d", key, num)
+			}
+			*target = num
+		}
+	}
+
+	return &filters, nil
 }

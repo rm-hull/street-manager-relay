@@ -74,12 +74,12 @@ func tablesExists(db *sql.DB, table string) (bool, error) {
 	return exists, nil
 }
 
-func (repo *DbRepository) Search(bbox *models.BBox, facets *models.Facets) ([]models.Event, error) {
+func (repo *DbRepository) Search(bbox *models.BBox, facets *models.Facets, temporalFilters *models.TemporalFilters) ([]models.Event, error) {
 	if bbox == nil {
 		return nil, fmt.Errorf("bounding box is required")
 	}
 
-	params := facetsToParams(bbox, facets)
+	params := facetsToParams(bbox, facets, temporalFilters)
 	rows, err := repo.searchStmt.Query(params...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute search query: %w", err)
@@ -180,10 +180,12 @@ func (repo *DbRepository) Search(bbox *models.BBox, facets *models.Facets) ([]mo
 	return events, nil
 }
 
-func facetsToParams(bbox *models.BBox, facets *models.Facets) []any {
+func facetsToParams(bbox *models.BBox, facets *models.Facets, temporalFilters *models.TemporalFilters) []any {
 	params := []any{
 		// Correct parameter order: maxX, minX, maxY, minY (which seems counterintuitive)
 		bbox.MaxX, bbox.MinX, bbox.MaxY, bbox.MinY,
+		fmt.Sprintf("+%d days", temporalFilters.MaxDaysAhead),
+		fmt.Sprintf("-%d days", temporalFilters.MaxDaysBehind),
 	}
 
 	// Add string facet parameters (each facet needs 3 parameters for the OR condition)
@@ -199,6 +201,7 @@ func facetsToParams(bbox *models.BBox, facets *models.Facets) []any {
 
 	for _, getter := range facetGetters {
 		jsonVal := toJSONOrNil(getFacetSlice(facets, getter))
+		// Needs to be copied 3x times for the placeholders
 		params = append(params, jsonVal, jsonVal, jsonVal)
 	}
 

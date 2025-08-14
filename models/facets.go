@@ -9,3 +9,8 @@ type Facets struct {
 	HighwayAuthority         []string
 	PromoterOrganisation     []string
 }
+
+type TemporalFilters struct {
+	MaxDaysAhead  int
+	MaxDaysBehind int
+}
