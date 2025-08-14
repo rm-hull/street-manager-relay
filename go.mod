@@ -1,6 +1,6 @@
 module github.com/rm-hull/street-manager-relay
 
-go 1.24.6
+go 1.25
 
 require github.com/gin-gonic/gin v1.10.1
 
@@ -16,7 +16,6 @@ require (
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0 // indirect
 	github.com/influxdata/line-protocol v0.0.0-20210922203350-b1ad95c89adf // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
-	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
