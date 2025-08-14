@@ -19,11 +19,6 @@ jobs:
       pull-requests: write
       checks: write
 
-    services:
-      docker:
-        image: docker:dind
-        options: --privileged
-
     steps:
       - uses: actions/checkout@v5
 
@@ -32,16 +27,15 @@ jobs:
         with:
           go-version: "1.24"
 
-      - name: Install testcontainers dependencies
-        run: docker --version
-
-      - name: Cache Docker images
+      - name: Cache Go modules
         uses: actions/cache@v4
         with:
-          path: /var/lib/docker
-          key: ${{ runner.os }}-docker-${{ hashFiles('**/go.sum') }}
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            ${{ runner.os }}-docker-
+            ${{ runner.os }}-go-
 
       - name: Test
         run: |
