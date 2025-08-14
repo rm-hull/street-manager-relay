@@ -88,34 +88,23 @@ func bindTemporalFilters(c *gin.Context) (*models.TemporalFilters, error) {
 		MaxDaysBehind: 0,
 	}
 
-	if value := c.Query("max_days_ahead"); value != "" {
-		num, err := toInt("max_days_ahead", value)
-		if err != nil {
-			return nil, err
-		}
-		filters.MaxDaysAhead = num
+	params := map[string]*int{
+		"max_days_ahead":  &filters.MaxDaysAhead,
+		"max_days_behind": &filters.MaxDaysBehind,
 	}
 
-	if value := c.Query("max_days_behind"); value != "" {
-		num, err := toInt("max_days_behind", value)
-		if err != nil {
-			return nil, err
+	for key, target := range params {
+		if value := c.Query(key); value != "" {
+			num, err := strconv.Atoi(value)
+			if err != nil {
+				return nil, fmt.Errorf("failed to convert %s: %w", key, err)
+			}
+			if num < 0 {
+				return nil, fmt.Errorf("%s must be non-negative, but got %d", key, num)
+			}
+			*target = num
 		}
-		filters.MaxDaysBehind = num
 	}
 
 	return &filters, nil
-}
-
-func toInt(field string, value string) (int, error) {
-
-	num, err := strconv.Atoi(value)
-	if err != nil {
-		return 0, fmt.Errorf("failed to convert %s: %w", field, err)
-	}
-	if num < 0 {
-		return 0, fmt.Errorf("%s must be non-negative, but got %d", field, num)
-	}
-
-	return num, nil
 }
