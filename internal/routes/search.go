@@ -62,10 +62,14 @@ func bindFacets(c *gin.Context) (*models.Facets, error) {
 // expandCommaSeparated handles both multiple query params and comma-separated values
 // e.g., both "?type=A&type=B" and "?type=A,B" result in []string{"A", "B"}
 func expandCommaSeparated(values []string) []string {
-	var result []string
+	if len(values) == 0 {
+		return nil
+	}
+	// Pre-allocate a reasonable capacity to avoid re-allocations
+	result := make([]string, 0, len(values))
 	for _, value := range values {
-		parts := strings.SplitSeq(value, ",")
-		for part := range parts {
+		parts := strings.Split(value, ",")
+		for _, part := range parts {
 			if trimmed := strings.TrimSpace(part); trimmed != "" {
 				result = append(result, trimmed)
 			}
