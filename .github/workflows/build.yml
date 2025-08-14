@@ -27,18 +27,20 @@ jobs:
         with:
           go-version: "1.25"
 
-      - name: Cache Go modules
+      - name: Cache Go modules & tools
         uses: actions/cache@v4
         with:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
+            ~/go/bin
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
 
       - name: Test
         run: |
+          export PATH=$(go env GOPATH)/bin:$PATH
           go install gotest.tools/gotestsum@latest
           mkdir -p ./test-reports/
           make test
