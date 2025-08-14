@@ -28,7 +28,7 @@ func HandleSearch(repo *internal.DbRepository) gin.HandlerFunc {
 
 		temporalFilters, err := bindTemporalFilters(c)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Malformed temporal filters"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
@@ -91,7 +91,10 @@ func bindTemporalFilters(c *gin.Context) (*models.TemporalFilters, error) {
 	if value := c.Query("max_days_ahead"); value != "" {
 		num, err := strconv.Atoi(value)
 		if err != nil {
-			return nil, fmt.Errorf("failed to convert max_days_ahead=%s: %w", value, err)
+			return nil, fmt.Errorf("failed to convert max_days_ahead: %w", err)
+		}
+		if num < 0 {
+			return nil, fmt.Errorf("max_days_ahead must be non-negative, but got %d", num)
 		}
 		filters.MaxDaysAhead = num
 	}
@@ -99,7 +102,10 @@ func bindTemporalFilters(c *gin.Context) (*models.TemporalFilters, error) {
 	if value := c.Query("max_days_behind"); value != "" {
 		num, err := strconv.Atoi(value)
 		if err != nil {
-			return nil, fmt.Errorf("failed to convert max_days_behind=%s: %w", value, err)
+			return nil, fmt.Errorf("failed to convert max_days_behind: %w", err)
+		}
+		if num < 0 {
+			return nil, fmt.Errorf("max_days_behind must be non-negative, but got %d", num)
 		}
 		filters.MaxDaysBehind = num
 	}
