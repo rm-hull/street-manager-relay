@@ -13,6 +13,7 @@ The project is built with a modular architecture, with different components resp
 -   **`internal/db.go`**: This file handles all the database interactions. It uses the `sqlite3` library to work with the SQLite database.
 -   **`internal/routes/sns.go`**: This file defines the handler for incoming SNS messages. It validates the message signature and then processes the message based on its type (`SubscriptionConfirmation` or `Notification`).
 -   **`internal/routes/search.go`**: This file defines the handler for the `/v1/street-manager-relay/search` endpoint. It parses the bounding box and facet parameters from the query string and then uses the `DbRepository` to search for events in the database.
+-   **`internal/routes/refdata.go`**: This file defines the handler for the `/v1/street-manager-relay/refdata` endpoint. It returns reference data used for filtering and faceting event searches.
 -   **`models/*`**: These files define the data models used in the application, such as `Event`, `BoundingBox`, and `Facets`.
 
 ## Installation
@@ -65,6 +66,34 @@ This endpoint is used to search for events in the database.
 
 ```bash
 curl -X GET "http://localhost:8080/v1/street-manager-relay/search?bbox=418995,435778,429089,441777&work_status_ref=in_progress,planned"
+```
+
+#### `GET /v1/street-manager-relay/refdata`
+
+This endpoint returns reference data used for filtering and faceting event searches. The data includes lists of possible values for facets such as permit status, traffic management type, work status, work category, road category, highway authority, and promoter organisation, along with counts for each value.
+
+**Response:**
+
+-   `refdata`: An object mapping each facet to its possible values and their counts.
+-   `attribution`: Attribution information for the data source.
+
+**Example response:**
+
+```json
+{
+  "refdata": {
+    "permit_status": { "granted": 123, "refused": 45 },
+    "work_status_ref": { "planned": 67, "in_progress": 89 },
+    ...
+  },
+  "attribution": "Contains public sector information licensed under the Open Government Licence v3.0."
+}
+```
+
+**Example `curl` request:**
+
+```bash
+curl -X GET "http://localhost:8080/v1/street-manager-relay/refdata"
 ```
 
 ### Command-Line Interface
