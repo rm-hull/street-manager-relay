@@ -18,9 +18,13 @@ var createSQL string
 //go:embed sql/search.sql
 var searchSQL string
 
+//go:embed sql/ref_data.sql
+var refDataSQL string
+
 type DbRepository struct {
-	db         *sql.DB
-	searchStmt *sql.Stmt
+	db          *sql.DB
+	searchStmt  *sql.Stmt
+	refDataStmt *sql.Stmt
 }
 
 type Batch struct {
@@ -48,8 +52,17 @@ func NewDbRepository(dbPath string) (*DbRepository, error) {
 		return nil, fmt.Errorf("failed to prepare search SQL: %w", err)
 	}
 
+	refDataStmt, err := db.Prepare(refDataSQL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare ref-data SQL: %w", err)
+	}
+
 	log.Printf("Database initialized successfully: %s", dbPath)
-	return &DbRepository{db: db, searchStmt: searchStmt}, nil
+	return &DbRepository{
+		db:          db,
+		searchStmt:  searchStmt,
+		refDataStmt: refDataStmt,
+	}, nil
 }
 
 func create(db *sql.DB) error {
@@ -72,6 +85,40 @@ func tablesExists(db *sql.DB, table string) (bool, error) {
 		return false, err
 	}
 	return exists, nil
+}
+
+func (repo *DbRepository) RefData() (*models.RefData, error) {
+	refData := make(models.RefData)
+
+	rows, err := repo.refDataStmt.Query()
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute refData query: %w", err)
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Error closing rows: %v", err)
+		}
+	}()
+
+	var facet string
+	var value sql.NullString
+	var count int
+
+	for rows.Next() {
+		if err := rows.Scan(&facet, &value, &count); err != nil {
+			return nil, fmt.Errorf("failed to scan row: %w", err)
+		}
+
+		if _, ok := refData[facet]; !ok {
+			refData[facet] = make(map[string]int)
+		}
+		v := ""
+		if value.Valid {
+			v = value.String
+		}
+		refData[facet][v] = count
+	}
+	return &refData, nil
 }
 
 func (repo *DbRepository) Search(bbox *models.BBox, facets *models.Facets, temporalFilters *models.TemporalFilters) ([]models.Event, error) {
@@ -228,7 +275,13 @@ func getFacetSlice(facets *models.Facets, getter func(*models.Facets) []string) 
 func (repo *DbRepository) Close() error {
 	if repo.searchStmt != nil {
 		if err := repo.searchStmt.Close(); err != nil {
-			return fmt.Errorf("failed to close db statement: %w", err)
+			return fmt.Errorf("failed to close search db statement: %w", err)
+		}
+	}
+
+	if repo.refDataStmt != nil {
+		if err := repo.refDataStmt.Close(); err != nil {
+			return fmt.Errorf("failed to close ref-data db statement: %w", err)
 		}
 	}
 

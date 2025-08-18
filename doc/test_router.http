@@ -31,6 +31,14 @@ Connection: keep-alive
 Origin: https://foo.example
 
 
+### Reference Data
+GET http://localhost:8080/v1/street-manager-relay/refdata
+Accept: application/json;q=0.9,*/*;q=0.8
+Accept-Language: en-us,en;q=0.5
+Accept-Encoding: gzip,deflate
+Connection: keep-alive
+Origin: https://foo.example
+
 ### Health check for the API
 GET http://localhost:8080/healthz
 Accept: application/json
