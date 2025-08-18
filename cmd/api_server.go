@@ -59,11 +59,11 @@ func ApiServer(dbPath string, port int, debug bool) {
 		log.Fatalf("failed to initialize healthcheck: %v", err)
 	}
 
-	cache := memoize.NewMemoizer(24*time.Hour, 1*time.Hour)
-	certManager := internal.NewCertManager(cache)
+	certManager := internal.NewCertManager(memoize.NewMemoizer(24*time.Hour, 1*time.Hour))
 
 	r.POST("/v1/street-manager-relay/sns", routes.HandleSNSMessage(repo, certManager))
 	r.GET("/v1/street-manager-relay/search", routes.HandleSearch(repo))
+	r.GET("/v1/street-manager-relay/refdata", routes.HandleRefData(repo, memoize.NewMemoizer(10*time.Minute, 1*time.Hour)))
 
 	addr := fmt.Sprintf(":%d", port)
 	log.Printf("Starting HTTP API Server on port %d...", port)

@@ -14,3 +14,5 @@ type TemporalFilters struct {
 	MaxDaysAhead  int
 	MaxDaysBehind int
 }
+
+type RefData map[string]map[string]int

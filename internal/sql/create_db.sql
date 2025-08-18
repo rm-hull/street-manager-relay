@@ -94,3 +94,11 @@ CREATE VIRTUAL TABLE IF NOT EXISTS events_rtree USING rtree(
     miny,
     maxy
 );
+
+CREATE INDEX IF NOT EXISTS idx_events_permit_status ON events(permit_status);
+CREATE INDEX IF NOT EXISTS idx_events_traffic_management_type_ref ON events(traffic_management_type_ref);
+CREATE INDEX IF NOT EXISTS idx_events_work_status_ref ON events(work_status_ref);
+CREATE INDEX IF NOT EXISTS idx_events_work_category_ref ON events(work_category_ref);
+CREATE INDEX IF NOT EXISTS idx_events_road_category ON events(road_category);
+CREATE INDEX IF NOT EXISTS idx_events_highway_authority ON events(highway_authority);
+CREATE INDEX IF NOT EXISTS idx_events_promoter_organisation ON events(promoter_organisation);
