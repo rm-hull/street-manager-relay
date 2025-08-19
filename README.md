@@ -79,7 +79,7 @@ This endpoint returns reference data used for filtering and faceting event searc
 
 **Example response:**
 
-```json
+```json5
 {
   "refdata": {
     "permit_status": { "granted": 123, "refused": 45 },
