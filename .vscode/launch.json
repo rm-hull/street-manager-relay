@@ -35,6 +35,19 @@
             "program": "main.go",
             "args": ["regen", "--db=./data/street-manager.db"],
             "buildFlags": "-tags=jsoniter,sqlite_rtree"
+        },
+        {
+            "name": "Launch delete completed events (dry-run)",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "main.go",
+            "args": [
+                "delete-completed",
+                "--db=./data/street-manager.db",
+                "--dry-run"
+            ],
+            "buildFlags": "-tags=jsoniter,sqlite_rtree"
         }
     ]
 }
