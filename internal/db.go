@@ -623,7 +623,7 @@ func (repo *DbRepository) RegenerateIndex() (int, int, error) {
 
 }
 
-// DeleteCompletedEvents deletes events and associated rtree entries older than N days
+// deletes events and associated rtree entries for the given IDs.
 func (repo *DbRepository) DeleteEvents(ids []int64) (int, error) {
 
 	if len(ids) == 0 {
