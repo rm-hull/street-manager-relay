@@ -27,7 +27,9 @@ func DeleteCompletedEvents(dbPath string, days int, dryRun bool) error {
 
 	if dryRun {
 		log.Printf("[DRY RUN] Would delete %d completed events and associated rtree entries.", len(ids))
-		if len(ids) > 0 {
+		if len(ids) > 10 {
+			log.Printf("[DRY RUN] Event IDs (first 10): %v", ids[:10])
+		} else if len(ids) > 0 {
 			log.Printf("[DRY RUN] Event IDs: %v", ids)
 		}
 		return nil
