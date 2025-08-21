@@ -44,8 +44,7 @@
             "program": "main.go",
             "args": [
                 "delete-completed",
-                "--db=./data/street-manager.db",
-                "--dry-run"
+                "--db=./data/street-manager.db"
             ],
             "buildFlags": "-tags=jsoniter,sqlite_rtree"
         }

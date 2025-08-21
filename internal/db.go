@@ -652,7 +652,6 @@ func (repo *DbRepository) DeleteEvents(ids []int64) (int, error) {
 		return 0, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
-	log.Printf("Successfully deleted %d completed events and associated rtree entries.", len(ids))
 	return len(ids), nil
 }
 
