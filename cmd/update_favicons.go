@@ -18,7 +18,7 @@ func UpdateFaviconsInCSV(csvFile string) error {
 		return err
 	}
 
-	updated := make([]*models.PromoterOrg, 0, 10)
+	updated := make([]*models.PromoterOrg, 0, len(orgs))
 	for idx, record := range orgs {
 
 		log.Printf("Processing record %d: %s", idx, record.Url)
@@ -34,7 +34,7 @@ func UpdateFaviconsInCSV(csvFile string) error {
 		updated = append(updated, record)
 	}
 
-	f, err := os.OpenFile(csvFile, os.O_RDWR, 0644)
+	f, err := os.OpenFile(csvFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to open file %s: %w", csvFile, err)
 	}
