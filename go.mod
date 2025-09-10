@@ -6,6 +6,7 @@ require github.com/gin-gonic/gin v1.10.1
 
 require (
 	github.com/andybalholm/brotli v1.2.0 // indirect
+	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -40,6 +41,7 @@ require (
 
 require (
 	github.com/Depado/ginprom v1.8.1
+	github.com/PuerkitoBio/goquery v1.10.3
 	github.com/aurowora/compress v0.0.0-20230724224640-6512772d482f
 	github.com/bytedance/sonic v1.14.0 // indirect
 	github.com/bytedance/sonic/loader v0.3.0 // indirect

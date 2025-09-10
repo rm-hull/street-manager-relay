@@ -16,6 +16,7 @@ func main() {
 	var port int
 	var debug bool
 	var maxFiles int
+	var filePath string
 
 	internal.ShowVersion()
 
@@ -65,9 +66,21 @@ func main() {
 		},
 	}
 
+	updateFaviconsCmd := &cobra.Command{
+		Use:   "favicons [--file <path>]",
+		Short: "Update favicons",
+		Run: func(_ *cobra.Command, _ []string) {
+			if err := cmd.UpdateFaviconsInCSV(filePath); err != nil {
+				log.Fatalf("Update favicons failed: %v", err)
+			}
+		},
+	}
+	updateFaviconsCmd.Flags().StringVar(&filePath, "file", "./internal/promoter/organisations.csv", "Path to promoter orgs CSV file")
+
 	rootCmd.AddCommand(apiServerCmd)
 	rootCmd.AddCommand(bulkLoaderCmd)
 	rootCmd.AddCommand(regenCmd)
+	rootCmd.AddCommand(updateFaviconsCmd)
 	if err = rootCmd.Execute(); err != nil {
 		panic(err)
 	}
