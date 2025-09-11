@@ -25,7 +25,7 @@ func UpdateFaviconsInCSV(csvFile string) error {
 
 		iconInfo, err := favicon.Extract(record.Url)
 		if err != nil {
-			log.Println(err)
+			log.Printf("failed to extract favicon for %s: %v", record.Url, err)
 		} else {
 			record.Favicon = &iconInfo.Href
 		}
