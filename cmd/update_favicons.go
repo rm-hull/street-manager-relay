@@ -23,13 +23,11 @@ func UpdateFaviconsInCSV(csvFile string) error {
 
 		log.Printf("Processing record %d: %s", idx, record.Url)
 
-		if record.Favicon == nil {
-			iconInfo, err := favicon.Extract(record.Url)
-			if err != nil {
-				log.Println(err)
-			} else {
-				record.Favicon = &iconInfo.Href
-			}
+		iconInfo, err := favicon.Extract(record.Url)
+		if err != nil {
+			log.Println(err)
+		} else {
+			record.Favicon = &iconInfo.Href
 		}
 		updated = append(updated, record)
 	}
