@@ -20,8 +20,7 @@ func GetPromoterOrgsList() ([]*models.PromoterOrg, error) {
 		if record.Error != nil {
 			return nil, fmt.Errorf("failed to load promoter organisations: %w", record.Error)
 		}
-		copy := *record.Value
-		arr = append(arr, &copy)
+		arr = append(arr, record.Value)
 	}
 
 	return arr, nil
