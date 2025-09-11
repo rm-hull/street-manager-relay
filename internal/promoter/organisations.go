@@ -28,19 +28,21 @@ func GetPromoterOrgsList() ([]*models.PromoterOrg, error) {
 	return arr, nil
 }
 
-func GetPromoterOrgsMap() (map[int]*models.PromoterOrg, error) {
+func GetPromoterOrgsMap() (Organisations, error) {
 	orgs, err := GetPromoterOrgsList()
 	if err != nil {
 		return nil, err
 	}
 
-	m := make(map[int]*models.PromoterOrg)
+	m := make(map[string]*models.PromoterOrg)
 	for _, record := range orgs {
 		if _, ok := m[record.Id]; ok {
-			return nil, fmt.Errorf("duplicate key detected: %d", record.Id)
+			return nil, fmt.Errorf("duplicate key detected: %s", record.Id)
 		}
 		m[record.Id] = record
 	}
 
 	return m, nil
 }
+
+type Organisations map[string]*models.PromoterOrg

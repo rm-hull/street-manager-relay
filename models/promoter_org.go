@@ -2,12 +2,10 @@ package models
 
 import (
 	_ "embed"
-	"fmt"
-	"strconv"
 )
 
 type PromoterOrg struct {
-	Id      int
+	Id      string
 	Name    string
 	Url     string
 	Favicon *string
@@ -15,7 +13,7 @@ type PromoterOrg struct {
 
 func (org *PromoterOrg) ToCSV() []string {
 	row := []string{
-		strconv.Itoa(org.Id),
+		org.Id,
 		org.Name,
 		org.Url,
 		"",
@@ -28,12 +26,7 @@ func (org *PromoterOrg) ToCSV() []string {
 }
 
 func (org *PromoterOrg) FromCSV(record, headers []string) (*PromoterOrg, error) {
-	id, err := strconv.Atoi(record[0])
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert id=%s: %w", record[0], err)
-	}
-
-	org.Id = id
+	org.Id = record[0]
 	org.Name = record[1]
 	org.Url = record[2]
 	if len(record) == 4 && record[3] != "" {
