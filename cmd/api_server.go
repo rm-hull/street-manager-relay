@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kofalt/go-memoize"
 	"github.com/rm-hull/street-manager-relay/internal"
+	"github.com/rm-hull/street-manager-relay/internal/promoter"
 	"github.com/rm-hull/street-manager-relay/internal/routes"
 	"github.com/tavsec/gin-healthcheck/checks"
 
@@ -20,6 +21,11 @@ import (
 )
 
 func ApiServer(dbPath string, port int, debug bool) {
+
+	organisations, err := promoter.GetPromoterOrgsMap()
+	if err != nil {
+		log.Fatalf("failed to initialize promoter organisations: %v", err)
+	}
 
 	repo, err := internal.NewDbRepository(dbPath)
 	if err != nil {
@@ -62,7 +68,7 @@ func ApiServer(dbPath string, port int, debug bool) {
 	certManager := internal.NewCertManager(memoize.NewMemoizer(24*time.Hour, 1*time.Hour))
 
 	r.POST("/v1/street-manager-relay/sns", routes.HandleSNSMessage(repo, certManager))
-	r.GET("/v1/street-manager-relay/search", routes.HandleSearch(repo))
+	r.GET("/v1/street-manager-relay/search", routes.HandleSearch(repo, organisations))
 	r.GET("/v1/street-manager-relay/refdata", routes.HandleRefData(repo, memoize.NewMemoizer(10*time.Minute, 1*time.Hour)))
 
 	addr := fmt.Sprintf(":%d", port)
