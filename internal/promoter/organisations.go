@@ -13,11 +13,10 @@ import (
 var promoterOrgsCSV string
 
 func GetPromoterOrgsList() ([]*models.PromoterOrg, error) {
-	org := &models.PromoterOrg{}
 	arr := make([]*models.PromoterOrg, 0, 100)
 	reader := strings.NewReader(promoterOrgsCSV)
 
-	for record := range internal.ParseCSV(reader, false, org.FromCSV) {
+	for record := range internal.ParseCSV(reader, false, models.FromCSV) {
 		if record.Error != nil {
 			return nil, fmt.Errorf("failed to load promoter organisations: %w", record.Error)
 		}
