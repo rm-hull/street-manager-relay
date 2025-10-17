@@ -18,6 +18,7 @@ func main() {
 	var maxFiles int
 	var days int
 	var dryRun bool
+	var filePath string
 
 	internal.ShowVersion()
 
@@ -82,10 +83,22 @@ func main() {
 	deleteCompletedCmd.Flags().IntVar(&days, "days", 30, "Delete events completed more than N days ago")
 	deleteCompletedCmd.Flags().BoolVar(&dryRun, "dry-run", false, "Show what would be deleted without making changes")
 
+	updateFaviconsCmd := &cobra.Command{
+		Use:   "favicons [--file <path>]",
+		Short: "Update favicons",
+		Run: func(_ *cobra.Command, _ []string) {
+			if err := cmd.UpdateFaviconsInCSV(filePath); err != nil {
+				log.Fatalf("Update favicons failed: %v", err)
+			}
+		},
+	}
+	updateFaviconsCmd.Flags().StringVar(&filePath, "file", "./internal/promoter/organisations.csv", "Path to promoter orgs CSV file")
+
 	rootCmd.AddCommand(apiServerCmd)
 	rootCmd.AddCommand(bulkLoaderCmd)
 	rootCmd.AddCommand(regenCmd)
 	rootCmd.AddCommand(deleteCompletedCmd)
+	rootCmd.AddCommand(updateFaviconsCmd)
 	if err = rootCmd.Execute(); err != nil {
 		panic(err)
 	}

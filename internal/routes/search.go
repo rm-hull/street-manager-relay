@@ -9,10 +9,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/rm-hull/street-manager-relay/internal"
+	"github.com/rm-hull/street-manager-relay/internal/promoter"
 	"github.com/rm-hull/street-manager-relay/models"
 )
 
-func HandleSearch(repo *internal.DbRepository) gin.HandlerFunc {
+func HandleSearch(repo *internal.DbRepository, organisations promoter.Organisations) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		bbox, err := models.BoundingBoxFromCSV(c.Query("bbox"))
 		if err != nil {
@@ -40,7 +41,7 @@ func HandleSearch(repo *internal.DbRepository) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"results":     events,
+			"results":     enrich(organisations, events),
 			"attribution": internal.ATTRIBUTION,
 		})
 	}
@@ -107,4 +108,28 @@ func bindTemporalFilters(c *gin.Context) (*models.TemporalFilters, error) {
 	}
 
 	return &filters, nil
+}
+
+type EnrichedEvent struct {
+	*models.Event
+	PromoterWebsiteURL *string `json:"promoter_website_url,omitempty"`
+	PromoterLogoURL    *string `json:"promoter_logo_url,omitempty"`
+}
+
+func enrich(promoterOrgs promoter.Organisations, events []*models.Event) []*EnrichedEvent {
+	out := make([]*EnrichedEvent, len(events))
+
+	for idx, event := range events {
+
+		enrichedEvent := &EnrichedEvent{Event: event}
+
+		if event.PromoterSWACode != nil {
+			if org, ok := promoterOrgs[*event.PromoterSWACode]; ok {
+				enrichedEvent.PromoterWebsiteURL = &org.Url
+				enrichedEvent.PromoterLogoURL = org.Favicon
+			}
+		}
+		out[idx] = enrichedEvent
+	}
+	return out
 }

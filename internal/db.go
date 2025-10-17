@@ -122,7 +122,7 @@ func (repo *DbRepository) RefData() (*models.RefData, error) {
 	return &refData, nil
 }
 
-func (repo *DbRepository) Search(bbox *models.BBox, facets *models.Facets, temporalFilters *models.TemporalFilters) ([]models.Event, error) {
+func (repo *DbRepository) Search(bbox *models.BBox, facets *models.Facets, temporalFilters *models.TemporalFilters) ([]*models.Event, error) {
 	if bbox == nil {
 		return nil, fmt.Errorf("bounding box is required")
 	}
@@ -138,7 +138,7 @@ func (repo *DbRepository) Search(bbox *models.BBox, facets *models.Facets, tempo
 		}
 	}()
 
-	events := make([]models.Event, 0, 50)
+	events := make([]*models.Event, 0, 50)
 	for rows.Next() {
 		var event models.Event
 		if err := rows.Scan(
@@ -218,7 +218,7 @@ func (repo *DbRepository) Search(bbox *models.BBox, facets *models.Facets, tempo
 		); err != nil {
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
-		events = append(events, event)
+		events = append(events, &event)
 	}
 
 	if err := rows.Err(); err != nil {
