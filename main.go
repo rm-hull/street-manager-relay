@@ -5,8 +5,8 @@ import (
 	"math"
 
 	"github.com/joho/godotenv"
+	"github.com/rm-hull/godx"
 	"github.com/rm-hull/street-manager-relay/cmd"
-	"github.com/rm-hull/street-manager-relay/internal"
 	"github.com/spf13/cobra"
 )
 
@@ -18,12 +18,13 @@ func main() {
 	var maxFiles int
 	var filePath string
 
-	internal.ShowVersion()
-
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found")
 	}
-	internal.EnvironmentVars()
+
+	godx.GitVersion()
+	godx.EnvironmentVars()
+	godx.UserInfo()
 
 	rootCmd := &cobra.Command{
 		Use:  "street-manager-relay",

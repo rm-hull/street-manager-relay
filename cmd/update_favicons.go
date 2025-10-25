@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"encoding/csv"
-	"fmt"
 	"log"
 	"os"
 
+	"github.com/cockroachdb/errors"
 	"github.com/rm-hull/street-manager-relay/internal/favicon"
 	"github.com/rm-hull/street-manager-relay/internal/promoter"
 	"github.com/rm-hull/street-manager-relay/models"
@@ -34,7 +34,7 @@ func UpdateFaviconsInCSV(csvFile string) error {
 
 	f, err := os.OpenFile(csvFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		return fmt.Errorf("failed to open file %s: %w", csvFile, err)
+		return errors.Wrapf(err, "failed to open file %s", csvFile)
 	}
 	defer func() {
 		if err := f.Close(); err != nil {
@@ -48,7 +48,7 @@ func UpdateFaviconsInCSV(csvFile string) error {
 	for _, record := range updated {
 		row := record.ToCSV()
 		if err := csvWriter.Write(row); err != nil {
-			return fmt.Errorf("failed to write row=%v: %w", row, err)
+			return errors.Wrapf(err, "failed to write row=%v", row)
 		}
 	}
 	return nil

@@ -1,9 +1,9 @@
 package models
 
 import (
-	"fmt"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/rm-hull/street-manager-relay/generated"
 )
 
@@ -97,7 +97,7 @@ func (event *Event) BoundingBox() (*BBox, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("no coordinates found for bounding box calculation")
+	return nil, errors.New("no coordinates found for bounding box calculation")
 }
 
 func NewEventFrom(event generated.EventNotifierMessage) *Event {

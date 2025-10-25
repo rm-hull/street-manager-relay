@@ -2,9 +2,9 @@ package promoter
 
 import (
 	_ "embed"
-	"fmt"
 	"strings"
 
+	"github.com/cockroachdb/errors"
 	"github.com/rm-hull/street-manager-relay/internal"
 	"github.com/rm-hull/street-manager-relay/models"
 )
@@ -18,7 +18,7 @@ func GetPromoterOrgsList() ([]*models.PromoterOrg, error) {
 
 	for record := range internal.ParseCSV(reader, false, models.FromCSV) {
 		if record.Error != nil {
-			return nil, fmt.Errorf("failed to load promoter organisations: %w", record.Error)
+			return nil, errors.Wrap(record.Error, "failed to load promoter organisations")
 		}
 		arr = append(arr, record.Value)
 	}
@@ -35,7 +35,7 @@ func GetPromoterOrgsMap() (Organisations, error) {
 	m := make(map[string]*models.PromoterOrg)
 	for _, record := range orgs {
 		if _, ok := m[record.Id]; ok {
-			return nil, fmt.Errorf("duplicate key detected: %s", record.Id)
+			return nil, errors.Newf("duplicate key detected: %s", record.Id)
 		}
 		m[record.Id] = record
 	}

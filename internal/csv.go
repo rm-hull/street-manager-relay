@@ -2,9 +2,10 @@ package internal
 
 import (
 	"encoding/csv"
-	"fmt"
 	"io"
 	"iter"
+
+	"github.com/cockroachdb/errors"
 )
 
 type Result[T any] struct {
@@ -26,7 +27,7 @@ func ParseCSV[T any](reader io.Reader, includesHeader bool, fromFunc func(data [
 			if err != nil {
 				yield(Result[T]{
 					LineNum: lineNum,
-					Error:   fmt.Errorf("failed to read CSV headers: %w", err),
+					Error:   errors.Wrap(err, "failed to read CSV headers: %w"),
 				})
 				return
 			}
@@ -40,7 +41,7 @@ func ParseCSV[T any](reader io.Reader, includesHeader bool, fromFunc func(data [
 			} else if err != nil {
 				yield(Result[T]{
 					LineNum: lineNum,
-					Error:   fmt.Errorf("failed to read CSV line %d: %w", lineNum, err),
+					Error:   errors.Wrapf(err, "failed to read CSV line %d: %w", lineNum),
 				})
 				return
 			}
@@ -49,7 +50,7 @@ func ParseCSV[T any](reader io.Reader, includesHeader bool, fromFunc func(data [
 			if err != nil {
 				yield(Result[T]{
 					LineNum: lineNum,
-					Error:   fmt.Errorf("failed to parse CSV line %d: %w", lineNum, err),
+					Error:   errors.Wrapf(err, "failed to parse CSV line %d", lineNum),
 				})
 				return
 			}

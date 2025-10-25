@@ -7,10 +7,9 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
-	"errors"
-	"fmt"
 	"strings"
 
+	"github.com/cockroachdb/errors"
 	jsoniter "github.com/json-iterator/go"
 )
 
@@ -65,7 +64,7 @@ func validateSignature(message *SNSMessage, certificate string) (bool, error) {
 
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		return false, fmt.Errorf("failed to parse certificate: %w", err)
+		return false, errors.Wrap(err, "failed to parse certificate")
 	}
 
 	rsaPubKey, ok := cert.PublicKey.(*rsa.PublicKey)
@@ -82,7 +81,7 @@ func validateSignature(message *SNSMessage, certificate string) (bool, error) {
 
 	signature, err := base64.StdEncoding.DecodeString(message.Signature)
 	if err != nil {
-		return false, fmt.Errorf("failed to decode signature: %w", err)
+		return false, errors.Wrap(err, "failed to decode signature")
 	}
 
 	err = rsa.VerifyPKCS1v15(rsaPubKey, crypto.SHA1, hash[:], signature)
