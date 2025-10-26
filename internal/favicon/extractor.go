@@ -2,7 +2,6 @@ package favicon
 
 import (
 	"crypto/tls"
-	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -12,17 +11,23 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/cockroachdb/errors"
 )
 
 type IconInfo struct {
-	Href string
-	Src  string
-	Size int
+	Href     string
+	Src      string
+	Size     int
+	Priority bool
 }
 
 func resolveURL(base, href string) string {
 	if strings.HasPrefix(href, "data:") {
 		return href
+	}
+
+	if strings.HasPrefix(href, "//") {
+		href = href[1:]
 	}
 
 	u, err := url.Parse(href)
@@ -59,7 +64,7 @@ func Extract(url string) (*IconInfo, error) {
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+		return nil, errors.Wrap(err, "failed to create request")
 	}
 	req.Header.Set("Pragma", "no-cache")
 	req.Header.Set("Accept-Language", "en-GB,en-US;q=0.9,en;q=0.8")
@@ -74,7 +79,7 @@ func Extract(url string) (*IconInfo, error) {
 	}
 	res, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch from %s: %w", url, err)
+		return nil, errors.Wrapf(err, "failed to fetch from %s", url)
 	}
 	defer func() {
 		if err := res.Body.Close(); err != nil {
@@ -83,12 +88,12 @@ func Extract(url string) (*IconInfo, error) {
 	}()
 
 	if res.StatusCode > 299 {
-		return nil, fmt.Errorf("http status response from %s: %s", url, res.Status)
+		return nil, errors.Newf("http status response from %s: %s", url, res.Status)
 	}
 
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to build html document: %w", err)
+		return nil, errors.Wrap(err, "failed to build html document")
 	}
 
 	icons := make([]IconInfo, 0, 10)
@@ -108,17 +113,26 @@ func Extract(url string) (*IconInfo, error) {
 		doc.Find(selector).Each(func(i int, s *goquery.Selection) {
 			if href, ok := s.Attr(attr); ok {
 				size := parseSize(s.AttrOr("sizes", "0x0"))
-				icons = append(icons, IconInfo{Href: resolveURL(url, href), Size: size, Src: selector})
+				icons = append(icons, IconInfo{
+					Href:     resolveURL(url, href),
+					Size:     size,
+					Src:      selector,
+					Priority: attr == "href",
+				})
 			}
 		})
 	}
 
 	if len(icons) == 0 {
-		return nil, fmt.Errorf("no icons found for: %s", url)
+		return nil, errors.Newf("no icons found for: %s", url)
 	}
 
-	sort.Slice(icons, func(i, j int) bool {
-		return icons[i].Size > icons[j].Size
+	sort.SliceStable(icons, func(i, j int) bool {
+		if icons[i].Priority == icons[j].Priority {
+			return icons[i].Size > icons[j].Size
+		}
+
+		return icons[i].Priority
 	})
 
 	return &icons[0], nil

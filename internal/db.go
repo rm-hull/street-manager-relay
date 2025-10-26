@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rm-hull/street-manager-relay/models"
 	"github.com/tavsec/gin-healthcheck/checks"
@@ -36,26 +37,26 @@ type Batch struct {
 func NewDbRepository(dbPath string) (*DbRepository, error) {
 	db, err := sql.Open("sqlite3", dbPath+"?_journal_mode=WAL&_busy_timeout=5000")
 	if err != nil {
-		return nil, fmt.Errorf("failed to open database: %w", err)
+		return nil, errors.Wrap(err, "failed to open database")
 	}
 
 	if err = db.Ping(); err != nil {
-		return nil, fmt.Errorf("failed to connect to database: %w", err)
+		return nil, errors.Wrap(err, "failed to connect to database")
 	}
 
 	err = create(db)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create database: %w", err)
+		return nil, errors.Wrap(err, "failed to create database")
 	}
 
 	searchStmt, err := db.Prepare(searchSQL)
 	if err != nil {
-		return nil, fmt.Errorf("failed to prepare search SQL: %w", err)
+		return nil, errors.Wrap(err, "failed to prepare search SQL")
 	}
 
 	refDataStmt, err := db.Prepare(refDataSQL)
 	if err != nil {
-		return nil, fmt.Errorf("failed to prepare ref-data SQL: %w", err)
+		return nil, errors.Wrap(err, "failed to prepare ref-data SQL")
 	}
 
 	log.Printf("Database initialized successfully: %s", dbPath)
@@ -69,7 +70,7 @@ func NewDbRepository(dbPath string) (*DbRepository, error) {
 func create(db *sql.DB) error {
 	exists, err := tablesExists(db, "events")
 	if err != nil {
-		return fmt.Errorf("error checking if table exists: %w", err)
+		return errors.Wrap(err, "error checking if table exists")
 	}
 	if exists {
 		return nil
@@ -93,7 +94,7 @@ func (repo *DbRepository) RefData() (*models.RefData, error) {
 
 	rows, err := repo.refDataStmt.Query()
 	if err != nil {
-		return nil, fmt.Errorf("failed to execute refData query: %w", err)
+		return nil, errors.Wrap(err, "failed to execute refData query")
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
@@ -107,7 +108,7 @@ func (repo *DbRepository) RefData() (*models.RefData, error) {
 
 	for rows.Next() {
 		if err := rows.Scan(&facet, &value, &count); err != nil {
-			return nil, fmt.Errorf("failed to scan row: %w", err)
+			return nil, errors.Wrap(err, "failed to scan row")
 		}
 
 		if _, ok := refData[facet]; !ok {
@@ -124,13 +125,13 @@ func (repo *DbRepository) RefData() (*models.RefData, error) {
 
 func (repo *DbRepository) Search(bbox *models.BBox, facets *models.Facets, temporalFilters *models.TemporalFilters) ([]*models.Event, error) {
 	if bbox == nil {
-		return nil, fmt.Errorf("bounding box is required")
+		return nil, errors.New("bounding box is required")
 	}
 
 	params := facetsToParams(bbox, facets, temporalFilters)
 	rows, err := repo.searchStmt.Query(params...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to execute search query: %w", err)
+		return nil, errors.Wrap(err, "failed to execute search query")
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
@@ -216,13 +217,13 @@ func (repo *DbRepository) Search(bbox *models.BBox, facets *models.Facets, tempo
 			&event.CloseFootway,
 			&event.CloseFootwayRef,
 		); err != nil {
-			return nil, fmt.Errorf("failed to scan row: %w", err)
+			return nil, errors.Wrap(err, "failed to scan row")
 		}
 		events = append(events, &event)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating over rows: %w", err)
+		return nil, errors.Wrap(err, "error iterating over rows")
 	}
 
 	return events, nil
@@ -276,13 +277,13 @@ func getFacetSlice(facets *models.Facets, getter func(*models.Facets) []string) 
 func (repo *DbRepository) Close() error {
 	if repo.searchStmt != nil {
 		if err := repo.searchStmt.Close(); err != nil {
-			return fmt.Errorf("failed to close search db statement: %w", err)
+			return errors.Wrap(err, "failed to close search db statement")
 		}
 	}
 
 	if repo.refDataStmt != nil {
 		if err := repo.refDataStmt.Close(); err != nil {
-			return fmt.Errorf("failed to close ref-data db statement: %w", err)
+			return errors.Wrap(err, "failed to close ref-data db statement")
 		}
 	}
 
@@ -395,12 +396,12 @@ func (repo *DbRepository) BatchUpsert() (*Batch, error) {
 
 	tx, err := repo.db.Begin()
 	if err != nil {
-		return nil, fmt.Errorf("failed to begin transaction: %w", err)
+		return nil, errors.Wrap(err, "failed to begin transaction")
 	}
 
 	stmt, err := tx.Prepare(query)
 	if err != nil {
-		return nil, fmt.Errorf("failed to prepare statement: %w", err)
+		return nil, errors.Wrap(err, "failed to prepare statement")
 	}
 
 	return &Batch{
@@ -413,7 +414,7 @@ func (repo *DbRepository) BatchUpsert() (*Batch, error) {
 func (batch *Batch) Upsert(event *models.Event) (int64, error) {
 	bbox, err := event.BoundingBox()
 	if err != nil {
-		return 0, fmt.Errorf("failed to calculate bounding box: %w", err)
+		return 0, errors.Wrap(err, "failed to calculate bounding box")
 	}
 
 	// Extract values from struct
@@ -495,12 +496,12 @@ func (batch *Batch) Upsert(event *models.Event) (int64, error) {
 	var id int64
 	err = batch.stmt.QueryRow(values...).Scan(&id)
 	if err != nil {
-		return 0, fmt.Errorf("failed to execute upsert query: %w", err)
+		return 0, errors.Wrap(err, "failed to execute upsert query")
 	}
 
 	err = batch.upsertRTree(id, *bbox)
 	if err != nil {
-		return 0, fmt.Errorf("failed to insert into R-tree: %w", err)
+		return 0, errors.Wrap(err, "failed to insert into R-tree")
 	}
 
 	return id, nil
@@ -508,7 +509,7 @@ func (batch *Batch) Upsert(event *models.Event) (int64, error) {
 
 func (batch *Batch) Done() error {
 	if commitErr := batch.tx.Commit(); commitErr != nil {
-		return fmt.Errorf("failed to commit transaction: %w", commitErr)
+		return errors.Wrap(commitErr, "failed to commit transaction")
 	}
 
 	return nil
@@ -516,7 +517,7 @@ func (batch *Batch) Done() error {
 
 func (batch *Batch) Abort(err error) error {
 	if rbErr := batch.tx.Rollback(); rbErr != nil {
-		return fmt.Errorf("failed to rollback transaction: %v; original error: %w", rbErr, err)
+		return errors.Wrapf(rbErr, "failed to rollback transaction: original error: %w", err)
 	}
 	return err
 }
@@ -538,7 +539,7 @@ func (repo *DbRepository) RegenerateIndex() (int, int, error) {
 
 	tx, err := repo.db.Begin()
 	if err != nil {
-		return 0, 0, fmt.Errorf("failed to begin transaction: %w", err)
+		return 0, 0, errors.Wrap(err, "failed to begin transaction")
 	}
 
 	defer func() {
@@ -554,7 +555,7 @@ func (repo *DbRepository) RegenerateIndex() (int, int, error) {
 		WHERE ID=?
 	`)
 	if err != nil {
-		return 0, 0, fmt.Errorf("failed to prepare update statement: %w", err)
+		return 0, 0, errors.Wrap(err, "failed to prepare update statement")
 	}
 
 	rows, err := repo.db.Query(`
@@ -569,7 +570,7 @@ func (repo *DbRepository) RegenerateIndex() (int, int, error) {
 		INNER JOIN events_rtree r ON e.id = r.id
 	`)
 	if err != nil {
-		return 0, 0, fmt.Errorf("failed to execute query: %w", err)
+		return 0, 0, errors.Wrap(err, "failed to execute query")
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
@@ -586,12 +587,12 @@ func (repo *DbRepository) RegenerateIndex() (int, int, error) {
 
 	for rows.Next() {
 		if err := rows.Scan(&id, &coords, &bbox.MinX, &bbox.MaxX, &bbox.MinY, &bbox.MaxY); err != nil {
-			return 0, 0, fmt.Errorf("failed to scan row: %w", err)
+			return 0, 0, errors.Wrap(err, "failed to scan row")
 		}
 
 		regen, err := models.BoundingBoxFromWKT(coords)
 		if err != nil {
-			return 0, 0, fmt.Errorf("failed to create bounding box: %w", err)
+			return 0, 0, errors.Wrap(err, "failed to create bounding box")
 		}
 
 		if !regen.Equals(bbox, 1) {
@@ -600,15 +601,15 @@ func (repo *DbRepository) RegenerateIndex() (int, int, error) {
 
 			res, err := updateStmt.Exec(regen.MinX, regen.MaxX, regen.MinY, regen.MaxY, id)
 			if err != nil {
-				return 0, 0, fmt.Errorf("failed to update rtree: %w", err)
+				return 0, 0, errors.Wrap(err, "failed to update rtree")
 			}
 
 			updated, err := res.RowsAffected()
 			if err != nil {
-				return 0, 0, fmt.Errorf("failed to get rows affected: %w", err)
+				return 0, 0, errors.Wrap(err, "failed to get rows affected")
 			}
 			if updated != 1 {
-				return 0, 0, fmt.Errorf("unexpected rows affected %d for id=%d", updated, id)
+				return 0, 0, errors.Newf("unexpected rows affected %d for id=%d", updated, id)
 			}
 		}
 
@@ -616,7 +617,7 @@ func (repo *DbRepository) RegenerateIndex() (int, int, error) {
 	}
 
 	if err := tx.Commit(); err != nil {
-		return 0, 0, fmt.Errorf("failed to commit transaction: %w", err)
+		return 0, 0, errors.Wrap(err, "failed to commit transaction")
 	}
 
 	return affected, total, nil

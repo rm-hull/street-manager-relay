@@ -1,13 +1,12 @@
 package internal
 
 import (
-	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
 
+	"github.com/cockroachdb/errors"
 	"github.com/kofalt/go-memoize"
 )
 
@@ -27,13 +26,13 @@ func (cm *CachedCertManager) Download(certURL string) (string, error) {
 	certificate, err, _ := memoize.Call(cm.cache, certURL, func() (string, error) {
 		return cm.download(certURL)
 	})
-	return certificate, err
+	return certificate, errors.Wrapf(err, "unable to download from: %s", certURL)
 }
 
 func (cm *CachedCertManager) verifyMessageSignatureURL(certURL string) error {
 	parsedURL, err := url.Parse(certURL)
 	if err != nil {
-		return fmt.Errorf("invalid URL: %w", err)
+		return errors.Wrapf(err, "invalid URL: %s", certURL)
 	}
 
 	if parsedURL.Scheme != "https" {
@@ -45,12 +44,12 @@ func (cm *CachedCertManager) verifyMessageSignatureURL(certURL string) error {
 func (cm *CachedCertManager) download(certURL string) (string, error) {
 	log.Printf("Downloading certificate: %s", certURL)
 	if err := cm.verifyMessageSignatureURL(certURL); err != nil {
-		return "", err
+		return "", errors.Wrap(err, "failed to verify signature URL")
 	}
 
 	resp, err := http.Get(certURL)
 	if err != nil {
-		return "", fmt.Errorf("error fetching certificate: %w", err)
+		return "", errors.Wrap(err, "error fetching certificate")
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
@@ -59,12 +58,12 @@ func (cm *CachedCertManager) download(certURL string) (string, error) {
 	}()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("error fetching certificate: HTTP %d", resp.StatusCode)
+		return "", errors.Newf("error fetching certificate: HTTP %d", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("error reading certificate response: %w", err)
+		return "", errors.Wrap(err, "error reading certificate response")
 	}
 
 	return string(body), nil

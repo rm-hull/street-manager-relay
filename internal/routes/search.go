@@ -1,12 +1,11 @@
 package routes
 
 import (
-	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
+	"github.com/cockroachdb/errors"
 	"github.com/gin-gonic/gin"
 	"github.com/rm-hull/street-manager-relay/internal"
 	"github.com/rm-hull/street-manager-relay/internal/promoter"
@@ -17,26 +16,26 @@ func HandleSearch(repo *internal.DbRepository, organisations promoter.Organisati
 	return func(c *gin.Context) {
 		bbox, err := models.BoundingBoxFromCSV(c.Query("bbox"))
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		facets, err := bindFacets(c)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Malformed facets"})
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Malformed facets"})
 			return
 		}
 
 		temporalFilters, err := bindTemporalFilters(c)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		events, err := repo.Search(bbox, facets, temporalFilters)
 		if err != nil {
-			log.Printf("Error searching events: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to search events"})
+			_ = c.Error(errors.Wrap(err, "error searching events"))
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to search events"})
 			return
 		}
 
@@ -98,10 +97,10 @@ func bindTemporalFilters(c *gin.Context) (*models.TemporalFilters, error) {
 		if value := c.Query(key); value != "" {
 			num, err := strconv.Atoi(value)
 			if err != nil {
-				return nil, fmt.Errorf("failed to convert %s: %w", key, err)
+				return nil, errors.Wrapf(err, "failed to convert %s", key)
 			}
 			if num < 0 {
-				return nil, fmt.Errorf("%s must be non-negative, but got %d", key, num)
+				return nil, errors.Newf("%s must be non-negative, but got %d", key, num)
 			}
 			*target = num
 		}

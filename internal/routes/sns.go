@@ -2,10 +2,10 @@ package routes
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
+	"github.com/cockroachdb/errors"
 	"github.com/gin-gonic/gin"
 	"github.com/rm-hull/street-manager-relay/generated"
 	"github.com/rm-hull/street-manager-relay/internal"
@@ -16,40 +16,41 @@ func HandleSNSMessage(repo *internal.DbRepository, certManager internal.CertMana
 	return func(c *gin.Context) {
 		messageType := c.GetHeader("x-amz-sns-message-type")
 		if messageType == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing x-amz-sns-message-type header"})
+			_ = c.Error(errors.New("missing x-amz-sns-message-type header"))
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Missing x-amz-sns-message-type header"})
 			return
 		}
 
 		bodyBytes, err := c.GetRawData()
 		if err != nil {
-			log.Printf("Error reading request body: %v", err)
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read request body"})
+			_ = c.Error(errors.Wrap(err, "error reading request body"))
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Failed to read request body"})
 			return
 		}
 
 		var body internal.SNSMessage
 		if err := json.Unmarshal(bodyBytes, &body); err != nil {
-			log.Printf("Error parsing JSON: %v", err)
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
+			_ = c.Error(errors.Wrap(err, "error parsing JSON"))
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
 			return
 		}
 
 		valid, err := internal.IsValidSignature(&body, certManager)
 		if err != nil {
-			log.Printf("Error validating signature: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Signature validation failed"})
+			_ = c.Error(errors.Wrap(err, "signature validation failed"))
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Signature validation failed"})
 			return
 		}
 
 		if !valid {
-			log.Println("Message signature is not valid")
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Message signature is not valid"})
+			_ = c.Error(errors.New("message signature is not valid"))
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Message signature is not valid"})
 			return
 		}
 
 		if err := handleMessage(repo, &body); err != nil {
-			log.Printf("Error handling message: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to handle message"})
+			_ = c.Error(errors.Wrap(err, "failed to handle message "))
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Failed to handle message"})
 			return
 		}
 
@@ -73,7 +74,7 @@ func handleMessage(repo *internal.DbRepository, body *internal.SNSMessage) error
 func confirmSubscription(subscriptionURL string) error {
 	resp, err := http.Get(subscriptionURL)
 	if err != nil {
-		return fmt.Errorf("failed to confirm subscription: %w", err)
+		return errors.Wrap(err, "failed to confirm subscription")
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
@@ -82,7 +83,7 @@ func confirmSubscription(subscriptionURL string) error {
 	}()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("subscription confirmation failed with status: %d", resp.StatusCode)
+		return errors.Newf("subscription confirmation failed with HTTP %d", resp.StatusCode)
 	}
 
 	log.Println("Subscription confirmed")
@@ -92,16 +93,16 @@ func confirmSubscription(subscriptionURL string) error {
 func handleNotification(repo *internal.DbRepository, body *internal.SNSMessage) error {
 	event, err := generated.UnmarshalEventNotifierMessage([]byte(body.Message))
 	if err != nil {
-		return fmt.Errorf("failed to unmarshal event: %w", err)
+		return errors.Wrap(err, "failed to unmarshal event")
 	}
 
 	batch, err := repo.BatchUpsert()
 	if err != nil {
-		return fmt.Errorf("failed to create batch upserter: %w", err)
+		return errors.Wrap(err, "failed to create batch upserter")
 	}
 
 	if _, err = batch.Upsert(models.NewEventFrom(event)); err != nil {
-		return fmt.Errorf("failed to upsert: %w", batch.Abort(err))
+		return errors.Wrap(batch.Abort(err), "failed to upsert")
 	}
 
 	return batch.Done()
