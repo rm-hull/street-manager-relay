@@ -103,14 +103,14 @@ func sentryErrorHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
 
-		if len(c.Errors) > 0 {
-			err := c.Errors.Last().Err
-
+        if len(c.Errors) > 0 {
 			hub := sentrygin.GetHubFromContext(c)
-			if hub != nil {
-				hub.CaptureException(err)
-			} else {
-				sentry.CaptureException(err)
+			for _, e := range c.Errors {
+				if hub != nil {
+					hub.CaptureException(e.Err)
+				} else {
+					sentry.CaptureException(e.Err)
+				}
 			}
 		}
 	}
