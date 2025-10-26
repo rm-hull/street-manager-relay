@@ -103,7 +103,7 @@ func sentryErrorHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
 
-        if len(c.Errors) > 0 {
+		if len(c.Errors) > 0 {
 			hub := sentrygin.GetHubFromContext(c)
 			for _, e := range c.Errors {
 				if hub != nil {

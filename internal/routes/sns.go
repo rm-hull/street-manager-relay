@@ -83,7 +83,7 @@ func confirmSubscription(subscriptionURL string) error {
 	}()
 
 	if resp.StatusCode != http.StatusOK {
-		return errors.Wrapf(err, "subscription confirmation failed with status: %d", resp.StatusCode)
+		return errors.Newf("subscription confirmation failed with HTTP %d", resp.StatusCode)
 	}
 
 	log.Println("Subscription confirmed")
