@@ -26,6 +26,10 @@ func resolveURL(base, href string) string {
 		return href
 	}
 
+	if strings.HasPrefix(href, "//") {
+		href = href[1:]
+	}
+
 	u, err := url.Parse(href)
 	if err != nil {
 		return href
