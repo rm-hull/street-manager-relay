@@ -27,7 +27,7 @@ func ParseCSV[T any](reader io.Reader, includesHeader bool, fromFunc func(data [
 			if err != nil {
 				yield(Result[T]{
 					LineNum: lineNum,
-					Error:   errors.Wrap(err, "failed to read CSV headers: %w"),
+					Error:   errors.Wrap(err, "failed to read CSV headers"),
 				})
 				return
 			}
