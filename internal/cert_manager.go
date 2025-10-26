@@ -63,7 +63,7 @@ func (cm *CachedCertManager) download(certURL string) (string, error) {
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", errors.Wrap(err, "error reading certificate response: %w")
+		return "", errors.Wrap(err, "error reading certificate response")
 	}
 
 	return string(body), nil
