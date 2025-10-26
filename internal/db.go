@@ -130,7 +130,7 @@ func (repo *DbRepository) Search(bbox *models.BBox, facets *models.Facets, tempo
 	params := facetsToParams(bbox, facets, temporalFilters)
 	rows, err := repo.searchStmt.Query(params...)
 	if err != nil {
-		return nil, errors.Newf("failed to execute search query: %w", err)
+		return nil, errors.Wrap(err, "failed to execute search query")
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
