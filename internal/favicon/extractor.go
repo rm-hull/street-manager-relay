@@ -15,14 +15,19 @@ import (
 )
 
 type IconInfo struct {
-	Href string
-	Src  string
-	Size int
+	Href     string
+	Src      string
+	Size     int
+	Priority bool
 }
 
 func resolveURL(base, href string) string {
 	if strings.HasPrefix(href, "data:") {
 		return href
+	}
+
+	if strings.HasPrefix(href, "//") {
+		href = href[1:]
 	}
 
 	u, err := url.Parse(href)
@@ -108,7 +113,12 @@ func Extract(url string) (*IconInfo, error) {
 		doc.Find(selector).Each(func(i int, s *goquery.Selection) {
 			if href, ok := s.Attr(attr); ok {
 				size := parseSize(s.AttrOr("sizes", "0x0"))
-				icons = append(icons, IconInfo{Href: resolveURL(url, href), Size: size, Src: selector})
+				icons = append(icons, IconInfo{
+					Href:     resolveURL(url, href),
+					Size:     size,
+					Src:      selector,
+					Priority: attr == "href",
+				})
 			}
 		})
 	}
@@ -117,8 +127,12 @@ func Extract(url string) (*IconInfo, error) {
 		return nil, fmt.Errorf("no icons found for: %s", url)
 	}
 
-	sort.Slice(icons, func(i, j int) bool {
-		return icons[i].Size > icons[j].Size
+	sort.SliceStable(icons, func(i, j int) bool {
+		if icons[i].Priority == icons[j].Priority {
+			return icons[i].Size > icons[j].Size
+		}
+
+		return icons[i].Priority
 	})
 
 	return &icons[0], nil
