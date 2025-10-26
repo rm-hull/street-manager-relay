@@ -41,7 +41,7 @@ func ParseCSV[T any](reader io.Reader, includesHeader bool, fromFunc func(data [
 			} else if err != nil {
 				yield(Result[T]{
 					LineNum: lineNum,
-					Error:   errors.Wrapf(err, "failed to read CSV line %d: %w", lineNum),
+					Error:   errors.Wrapf(err, "failed to read CSV line %d", lineNum),
 				})
 				return
 			}
