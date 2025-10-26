@@ -2,7 +2,6 @@ package favicon
 
 import (
 	"crypto/tls"
-	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -12,6 +11,7 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/cockroachdb/errors"
 )
 
 type IconInfo struct {
@@ -64,7 +64,7 @@ func Extract(url string) (*IconInfo, error) {
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+		return nil, errors.Wrap(err, "failed to create request")
 	}
 	req.Header.Set("Pragma", "no-cache")
 	req.Header.Set("Accept-Language", "en-GB,en-US;q=0.9,en;q=0.8")
@@ -79,7 +79,7 @@ func Extract(url string) (*IconInfo, error) {
 	}
 	res, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch from %s: %w", url, err)
+		return nil, errors.Wrapf(err, "failed to fetch from %s", url)
 	}
 	defer func() {
 		if err := res.Body.Close(); err != nil {
@@ -88,12 +88,12 @@ func Extract(url string) (*IconInfo, error) {
 	}()
 
 	if res.StatusCode > 299 {
-		return nil, fmt.Errorf("http status response from %s: %s", url, res.Status)
+		return nil, errors.Newf("http status response from %s: %s", url, res.Status)
 	}
 
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to build html document: %w", err)
+		return nil, errors.Wrap(err, "failed to build html document")
 	}
 
 	icons := make([]IconInfo, 0, 10)
@@ -124,7 +124,7 @@ func Extract(url string) (*IconInfo, error) {
 	}
 
 	if len(icons) == 0 {
-		return nil, fmt.Errorf("no icons found for: %s", url)
+		return nil, errors.Newf("no icons found for: %s", url)
 	}
 
 	sort.SliceStable(icons, func(i, j int) bool {

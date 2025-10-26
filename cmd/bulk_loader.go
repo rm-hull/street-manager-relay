@@ -1,12 +1,12 @@
 package cmd
 
 import (
-	"fmt"
 	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
 
+	"github.com/cockroachdb/errors"
 	"github.com/rm-hull/street-manager-relay/generated"
 	"github.com/rm-hull/street-manager-relay/internal"
 	"github.com/rm-hull/street-manager-relay/models"
@@ -21,7 +21,7 @@ func isRunningInDocker() bool {
 func BulkLoader(dbPath string, folder string, maxRecords int) error {
 	repo, err := internal.NewDbRepository(dbPath)
 	if err != nil {
-		return fmt.Errorf("failed to initialize db repository: %w", err)
+		return errors.Wrap(err, "failed to initialize db repository")
 	}
 	defer func() {
 		if err := repo.Close(); err != nil {
@@ -32,7 +32,7 @@ func BulkLoader(dbPath string, folder string, maxRecords int) error {
 	log.Println("Finding files to import...")
 	files, err := walkFiles(folder, maxRecords)
 	if err != nil {
-		return fmt.Errorf("failed to import data: %w", err)
+		return errors.Wrap(err, "failed to import data")
 	}
 
 	isDocker := isRunningInDocker()
@@ -47,20 +47,20 @@ func BulkLoader(dbPath string, folder string, maxRecords int) error {
 
 	batch, err := repo.BatchUpsert()
 	if err != nil {
-		return fmt.Errorf("failed to create batch upserter: %w", err)
+		return errors.Wrap(err, "failed to create batch upserter")
 	}
 	for idx, file := range files {
 		if err := bar.Add(1); err != nil {
-			return fmt.Errorf("issue with progress bar: %w", batch.Abort(err))
+			return errors.Wrap(batch.Abort(err), "issue with progress bar")
 		}
 		event, err := loadJson(file)
 		if err != nil {
-			return fmt.Errorf("could not load file %s: %w", file, batch.Abort(err))
+			return errors.Wrapf(batch.Abort(err), "could not load file %s", file)
 		}
 
 		_, err = batch.Upsert(models.NewEventFrom(*event))
 		if err != nil {
-			return fmt.Errorf("failed to upsert event from file %s: %w", file, batch.Abort(err))
+			return errors.Wrapf(batch.Abort(err), "failed to upsert event from file %s", file)
 		}
 
 		if isDocker && idx%37 == 0 {
@@ -101,12 +101,12 @@ func loadJson(filename string) (*generated.EventNotifierMessage, error) {
 
 	fileContent, err := os.ReadFile(filename)
 	if err != nil {
-		return nil, fmt.Errorf("could not read file: %v", err)
+		return nil, errors.Wrap(err, "could not read file")
 	}
 
 	event, err := generated.UnmarshalEventNotifierMessage(fileContent)
 	if err != nil {
-		return nil, fmt.Errorf("could not unmarshal JSON: %v", err)
+		return nil, errors.Wrap(err, "could not unmarshal JSON")
 	}
 
 	return &event, nil

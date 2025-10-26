@@ -10,7 +10,7 @@
             "request": "launch",
             "mode": "auto",
             "program": "main.go",
-            "args": ["api-server"],
+            "args": ["api-server", "--debug"],
             "buildFlags": "-tags=jsoniter,sqlite_rtree"
         },
         {
@@ -42,7 +42,10 @@
             "request": "launch",
             "mode": "auto",
             "program": "main.go",
-            "args": ["favicons", "--file=./internal/promoter/organisations.csv"],
+            "args": [
+                "favicons",
+                "--file=./internal/promoter/organisations.csv"
+            ],
             "buildFlags": "-tags=jsoniter,sqlite_rtree"
         }
     ]

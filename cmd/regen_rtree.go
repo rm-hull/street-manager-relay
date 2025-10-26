@@ -1,16 +1,16 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
 
+	"github.com/cockroachdb/errors"
 	"github.com/rm-hull/street-manager-relay/internal"
 )
 
 func RegenerateIndex(dbPath string) error {
 	repo, err := internal.NewDbRepository(dbPath)
 	if err != nil {
-		return fmt.Errorf("failed to initialize db repository: %w", err)
+		return errors.Wrap(err, "failed to initialize db repository")
 	}
 	defer func() {
 		if err := repo.Close(); err != nil {
@@ -20,7 +20,7 @@ func RegenerateIndex(dbPath string) error {
 
 	affected, total, err := repo.RegenerateIndex()
 	if err != nil {
-		return fmt.Errorf("error regenerating index: %w", err)
+		return errors.Wrap(err, "error regenerating index")
 	}
 
 	if total > 0 {

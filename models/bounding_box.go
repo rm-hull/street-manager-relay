@@ -1,11 +1,11 @@
 package models
 
 import (
-	"fmt"
 	"math"
 	"strconv"
 	"strings"
 
+	"github.com/cockroachdb/errors"
 	"github.com/twpayne/go-geom/encoding/wkt"
 )
 
@@ -30,7 +30,7 @@ func (bbox BBox) Equals(other BBox, tolerance float64) bool {
 func BoundingBoxFromWKT(wktStr string) (*BBox, error) {
 	g, err := wkt.Unmarshal(wktStr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse WKT: %w", err)
+		return nil, errors.Wrap(err, "failed to parse WKT")
 	}
 
 	bounds := g.Bounds()
@@ -45,14 +45,14 @@ func BoundingBoxFromWKT(wktStr string) (*BBox, error) {
 func BoundingBoxFromCSV(bboxStr string) (*BBox, error) {
 	bboxParts := strings.Split(bboxStr, ",")
 	if len(bboxParts) != 4 {
-		return nil, fmt.Errorf("bbox must have 4 comma-separated values")
+		return nil, errors.New("bbox must have 4 comma-separated values")
 	}
 
 	bbox := make([]float64, 4)
 	for i, part := range bboxParts {
 		val, err := strconv.ParseFloat(strings.TrimSpace(part), 64)
 		if err != nil {
-			return nil, fmt.Errorf("invalid bbox value '%s': not a valid float", part)
+			return nil, errors.Newf("invalid bbox value '%s': not a valid float", part)
 		}
 		bbox[i] = val
 	}
