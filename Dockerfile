@@ -31,6 +31,7 @@ WORKDIR /app
 COPY --from=build /app/street-manager-relay .
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=build /usr/share/zoneinfo /usr/share/zoneinfo
+COPY cronjobs /etc/crontabs/root
 
 USER appuser
 EXPOSE 8080/tcp
