@@ -16,6 +16,8 @@ func main() {
 	var port int
 	var debug bool
 	var maxFiles int
+	var days int
+	var dryRun bool
 	var filePath string
 
 	if err := godotenv.Load(); err != nil {
@@ -67,6 +69,21 @@ func main() {
 		},
 	}
 
+	deleteCompletedCmd := &cobra.Command{
+		Use:   "delete-completed [--db <path>] [--days <n>] [--dry-run]",
+		Short: "Delete completed events older than N days",
+		Run: func(_ *cobra.Command, _ []string) {
+			if days <= 0 {
+				log.Fatalf("--days must be greater than 0")
+			}
+			if err := cmd.DeleteCompletedEvents(dbPath, days, dryRun); err != nil {
+				log.Fatalf("Failed to delete completed events: %v", err)
+			}
+		},
+	}
+	deleteCompletedCmd.Flags().IntVar(&days, "days", 30, "Delete events completed more than N days ago")
+	deleteCompletedCmd.Flags().BoolVar(&dryRun, "dry-run", false, "Show what would be deleted without making changes")
+
 	updateFaviconsCmd := &cobra.Command{
 		Use:   "favicons [--file <path>]",
 		Short: "Update favicons",
@@ -81,6 +98,7 @@ func main() {
 	rootCmd.AddCommand(apiServerCmd)
 	rootCmd.AddCommand(bulkLoaderCmd)
 	rootCmd.AddCommand(regenCmd)
+	rootCmd.AddCommand(deleteCompletedCmd)
 	rootCmd.AddCommand(updateFaviconsCmd)
 	if err = rootCmd.Execute(); err != nil {
 		panic(err)
