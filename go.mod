@@ -1,6 +1,6 @@
 module github.com/rm-hull/street-manager-relay
 
-go 1.25.3
+go 1.26
 
 require (
 	github.com/getsentry/sentry-go v0.36.1
