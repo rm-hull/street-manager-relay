@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/cockroachdb/errors"
 	_ "github.com/mattn/go-sqlite3"
@@ -621,4 +622,62 @@ func (repo *DbRepository) RegenerateIndex() (int, int, error) {
 
 	return affected, total, nil
 
+}
+
+// deletes events and associated rtree entries for the given IDs.
+func (repo *DbRepository) DeleteEvents(ids []int64) (int, error) {
+
+	if len(ids) == 0 {
+		log.Println("No events to delete.")
+		return 0, nil
+	}
+
+	tx, err := repo.db.Begin()
+	if err != nil {
+		return 0, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+
+	batch := &Batch{tx: tx}
+
+	for _, id := range ids {
+		if _, err := batch.tx.Exec(`DELETE FROM events_rtree WHERE id = ?`, id); err != nil {
+			return 0, fmt.Errorf("failed to delete from events_rtree for id %d: %w", id, batch.Abort(err))
+		}
+		if _, err := batch.tx.Exec("DELETE FROM events WHERE id = ?", id); err != nil {
+			return 0, fmt.Errorf("failed to delete from events for id %d: %w", id, batch.Abort(err))
+		}
+		log.Printf("Deleted event and rtree entry for id: %d", id)
+	}
+
+	if err := batch.Done(); err != nil {
+		return 0, fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return len(ids), nil
+}
+
+// returns the IDs of events older than N days
+func (repo *DbRepository) GetCompletedEvents(days int) ([]int64, error) {
+	cutoff := time.Now().AddDate(0, 0, -days).Format("2006-01-02 15:04:05")
+	log.Printf("Counting events with actual_end_date_time before %s", cutoff)
+	rows, err := repo.db.Query(`SELECT id FROM events WHERE actual_end_date_time < ?`, cutoff)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query completed events: %w", err)
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Error closing rows: %v", err)
+		}
+	}()
+
+	var ids []int64
+	var id int64
+
+	for rows.Next() {
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("failed to scan event id: %w", err)
+		}
+		ids = append(ids, id)
+	}
+	return ids, nil
 }

@@ -118,6 +118,20 @@ The application provides a command-line interface to manage the database.
     ./street-manager-relay regen
     ```
 
+-   **`delete-completed`**: Deletes events from the database where `actual_end_date_time` is older than the specified number of days. Associated entries in the `events_rtree` table are also deleted. Supports a `--dry-run` flag to preview what would be deleted without making changes.
+
+    ```bash
+    # Actually delete events older than 30 days
+    ./street-manager-relay delete-completed --db ./data/street-manager.db --days 30
+
+    # Preview what would be deleted (no changes made)
+    ./street-manager-relay delete-completed --db ./data/street-manager.db --days 30 --dry-run
+    ```
+
+    -   `--db <path>`: Path to the SQLite database file
+    -   `--days <n>`: Delete events completed more than N days ago
+    -   `--dry-run`: Show what would be deleted without making changes
+
 ## Dependencies
 
 -   [Gin](https://github.com/gin-gonic/gin): A popular web framework for Go.

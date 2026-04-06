@@ -1,0 +1,2 @@
+# run at 1:00 AM every day
+0 1 * * * /app/street-manager-relay delete-completed --db=/data/street-manager.db
