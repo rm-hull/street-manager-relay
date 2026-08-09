@@ -37,6 +37,18 @@
             "buildFlags": "-tags=jsoniter,sqlite_rtree"
         },
         {
+            "name": "Launch delete completed events (dry-run)",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "main.go",
+            "args": [
+                "delete-completed",
+                "--db=./data/street-manager.db"
+            ],
+            "buildFlags": "-tags=jsoniter,sqlite_rtree"
+        },
+        {
             "name": "Launch update favicons",
             "type": "go",
             "request": "launch",
