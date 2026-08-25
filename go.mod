@@ -1,6 +1,6 @@
 module github.com/map-services/street-manager-relay
 
-go 1.26
+go 1.27
 
 require (
 	github.com/getsentry/sentry-go v0.48.0
